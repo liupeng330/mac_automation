@@ -1,0 +1,169 @@
+
+<html>
+   <head>
+      <style type="text/css">
+         .sikuli-code {
+            font-size: 20px;
+            font-family: "Osaka-mono", Monospace;
+            line-height: 1.5em;
+            display:table-cell;
+            white-space: pre-wrap;       /* css-3 */
+            white-space: -moz-pre-wrap !important;  /* Mozilla, since 1999 */
+            white-space: -pre-wrap;      /* Opera 4-6 */
+            white-space: -o-pre-wrap;    /* Opera 7 */
+            word-wrap: break-word;       /* Internet Explorer 5.5+ */
+            width: 99%;   /* remove horizontal scroll-bar when viewing in IE7 */
+         }
+         .sikuli-code img {
+            vertical-align: middle;
+            margin: 2px;
+            border: 1px solid #ccc;
+            padding: 2px;
+            -moz-border-radius: 5px;
+            -webkit-border-radius: 5px;
+            -moz-box-shadow: 1px 1px 1px gray;
+            -webkit-box-shadow: 1px 1px 2px gray;
+         }
+         .kw {
+            color: blue;
+         }
+         .skw {
+            color: rgb(63, 127, 127);
+         }
+
+         .str {
+            color: rgb(128, 0, 0);
+         }
+
+         .dig {
+            color: rgb(128, 64, 0);
+         }
+
+         .cmt {
+            color: rgb(200, 0, 200);
+         }
+
+         h2 {
+            display: inline;
+            font-weight: normal;
+         }
+
+         .info {
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+            margin-bottom: 20px;
+            display: none;
+         }
+
+         a {
+            color: #9D2900;
+         }
+
+         body {
+            font-family: "Trebuchet MS", Arial, Sans-Serif;
+         }
+
+      </style>
+   </head>
+<body>
+<div class="info">
+<h2>test_case_1826.sikuli</h2> <a href="test_case_1826.zip">(Download this script)</a>
+</div>
+<pre class="sikuli-code">
+<span class="kw">from</span> nose.plugins.attrib <span class="kw">import</span> attr
+<span class="kw">from</span> helper <span class="kw">import</span> *
+<span class="kw">from</span> sikuli <span class="kw">import</span> *
+<span class="kw">from</span> global_config <span class="kw">import</span> *
+
+<span class="kw">from</span> controls.sign_in_control <span class="kw">import</span> *
+<span class="kw">from</span> controls.rt_control <span class="kw">import</span> *
+<span class="kw">from</span> controls.system_tray_control <span class="kw">import</span> *
+<span class="kw">from</span> controls.player_control <span class="kw">import</span> *
+
+<span class="kw">import</span> ops.operations <span class="kw">as</span> op
+
+<span class="kw">import</span> time
+
+<span class="kw">from</span> base <span class="kw">import</span> *
+
+
+<span class="kw">class</span> TestCase_1826(TestCase_Base):
+
+    <span class="str">""" Playback: Slideshow test """</span>
+
+    <span class="kw">def</span> _check_items_exists(self):
+        <span class="cmt"># verify test clips are all in the view</span>
+        log(<span class="str">"Verify test clip is in the view"</span>)
+        <span class="kw">for</span> i <span class="kw">in</span> range(len(story_play_items)):
+            <span class="kw">assert</span> region.exists(story_play_items[i], default_wait_time), <span class="str">"Fail to find screenshot of number "</span> + str(i + <span class="dig">1</span>) + <span class="str">"in library view"</span>
+
+    <span class="kw">def</span> setUp(self):
+        <span class="kw">try</span>:
+            TestCase_Base.setUp(self)
+
+            self.test_files = [<span class="str">"Playback_1_1.mp4"</span>, <span class="str">"Playback_2_1.mp4"</span>, <span class="str">"Playback_3_1.mp4"</span>]
+
+            <span class="cmt"># test clip</span>
+            self.test_case_path = prepare_content(
+                <span class="str">"1826"</span>, False, *self.test_files)
+
+            op.launch_RT_before_running_case()
+            assert_step(self.RT.remove_all_from_mymac_view())
+        <span class="kw">except</span>:
+            TestCase_Base.tearDown(self)
+            <span class="kw">raise</span>
+
+    @attr(<span class="str">'BVT'</span>)
+    <span class="kw">def</span> test_play_media_with_gallery_view_and_select_slideshow(self):
+        log(<span class="str">"Go to local library view"</span>)
+        assert_step(self.RT.switch_to_mymac_view())
+
+        log(<span class="str">"Add test clips into local library"</span>)
+        assert_step(self.RT.add_to_my_library(self.test_case_path))
+
+        self._check_items_exists()
+        log(<span class="str">"Play num 1 item"</span>)
+        assert_step(self.RT.play_video(story_play_items[<span class="dig">0</span>]))
+
+        log(<span class="str">"Select the first item in gallery view"</span>)
+        <span class="kw">for</span> i <span class="kw">in</span> range(len(slideshow_play_items)):
+            assert_step(self.RT.click_left_arrows_button_in_gallery_view())
+            time.<span class="skw">sleep</span>(<span class="dig">0.5</span>)
+
+        log(<span class="str">"Click 'play with slideshow' button"</span>)
+        self.RT.play_with_slideshow()
+
+        log(<span class="str">"Start to verify playback with slideshow"</span>)
+        self._verify_playback()
+
+    @attr(<span class="str">'BVT'</span>)
+    <span class="kw">def</span> test_play_slideshow_with_album(self):
+        log(<span class="str">"Go to cloud view"</span>)
+        assert_step(self.RT.switch_to_cloud_view())
+
+        <span class="cmt"># upload test files to cloud</span>
+        log(<span class="str">"Upload test content to cloud"</span>)
+        upload_video_files_via_API(*self.test_files)
+        self._check_items_exists()
+
+        <span class="cmt"># add items into album</span>
+        log(<span class="str">"Add test content to album"</span>)
+        assert_step(self.RT.add_item_to_album(story_play_items, item_in_album_view=slideshow_album_item))
+
+        log(<span class="str">"Play an album with slideshow, via right click menu item"</span>)
+        self.RT.play_with_slideshow_for_album(slideshow_album_item)
+
+        log(<span class="str">"Start to verify playback with slideshow"</span>)
+        self._verify_playback()
+
+    <span class="kw">def</span> _verify_playback(self):
+        play_verify = VerifyPlay(<span class="dig">30</span>, *slideshow_play_items)
+        play_verify.start()
+        play_verify.<span class="skw">wait</span>()
+        assert_step(play_verify.verify_result())
+
+    <span class="kw">def</span> tearDown(self):
+        TestCase_Base.tearDown(self)
+</pre>
+</body>
+</html>

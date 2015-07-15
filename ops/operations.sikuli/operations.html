@@ -1,0 +1,347 @@
+
+<html>
+   <head>
+      <style type="text/css">
+         .sikuli-code {
+            font-size: 20px;
+            font-family: "Osaka-mono", Monospace;
+            line-height: 1.5em;
+            display:table-cell;
+            white-space: pre-wrap;       /* css-3 */
+            white-space: -moz-pre-wrap !important;  /* Mozilla, since 1999 */
+            white-space: -pre-wrap;      /* Opera 4-6 */
+            white-space: -o-pre-wrap;    /* Opera 7 */
+            word-wrap: break-word;       /* Internet Explorer 5.5+ */
+            width: 99%;   /* remove horizontal scroll-bar when viewing in IE7 */
+         }
+         .sikuli-code img {
+            vertical-align: middle;
+            margin: 2px;
+            border: 1px solid #ccc;
+            padding: 2px;
+            -moz-border-radius: 5px;
+            -webkit-border-radius: 5px;
+            -moz-box-shadow: 1px 1px 1px gray;
+            -webkit-box-shadow: 1px 1px 2px gray;
+         }
+         .kw {
+            color: blue;
+         }
+         .skw {
+            color: rgb(63, 127, 127);
+         }
+
+         .str {
+            color: rgb(128, 0, 0);
+         }
+
+         .dig {
+            color: rgb(128, 64, 0);
+         }
+
+         .cmt {
+            color: rgb(200, 0, 200);
+         }
+
+         h2 {
+            display: inline;
+            font-weight: normal;
+         }
+
+         .info {
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+            margin-bottom: 20px;
+            display: none;
+         }
+
+         a {
+            color: #9D2900;
+         }
+
+         body {
+            font-family: "Trebuchet MS", Arial, Sans-Serif;
+         }
+
+      </style>
+   </head>
+<body>
+<div class="info">
+<h2>operations.sikuli</h2> <a href="operations.zip">(Download this script)</a>
+</div>
+<pre class="sikuli-code">
+<span class="kw">from</span> helper <span class="kw">import</span> *
+<span class="kw">from</span> sikuli <span class="kw">import</span> *
+<span class="kw">from</span> global_config <span class="kw">import</span> *
+<span class="kw">from</span> screenshots <span class="kw">import</span> *
+
+<span class="kw">from</span> controls.sign_in_control <span class="kw">import</span> *
+<span class="kw">from</span> controls.rt_control <span class="kw">import</span> *
+<span class="kw">from</span> controls.system_tray_control <span class="kw">import</span> *
+<span class="kw">from</span> controls.transfers_control <span class="kw">import</span> *
+
+<span class="kw">from</span> cloud_util.cloud_wrapper <span class="kw">import</span> *
+<span class="kw">import</span> time
+<span class="kw">import</span> os
+
+rt = RT(region)
+system_tray = SystemTray(top_menu_bar_region)
+cloud_helper = Wrapper(account_username, account_password, env)
+
+
+<span class="kw">def</span> sign_in(username=account_username, password=account_password, retry=<span class="dig">10</span>):
+    s = SignIn(region, username, password)
+    <span class="kw">while</span> (True):
+        <span class="kw">try</span>:
+            assert_step(s.sign_in())
+            <span class="kw">break</span>
+        <span class="kw">except</span>:
+            <span class="kw">if</span> retry &gt; <span class="dig">1</span>:
+                log(<span class="str">"Got exception from 'sign_in' method, will retry, %s times left."</span> % retry)
+                retry -= <span class="dig">1</span>
+            <span class="kw">else</span>:
+                log(<span class="str">"Got exception from 'sign_in' method, will throw it"</span>)
+                <span class="kw">raise</span>
+
+
+<span class="kw">def</span> sign_in_from_systray(username=account_username, password=account_password):
+    systray = SystemTray(top_menu_bar_region)
+    systray.sign_in()
+    <span class="kw">assert</span> region.exists(sign_in_button2, default_wait_time * <span class="dig">3</span>), <span class="str">"Fail to find 'Sign in' button in sing in page"</span>
+    sign_in(username, password)
+
+
+<span class="kw">def</span> sign_out():
+    rt.sign_out()
+    rt.quit()
+
+
+<span class="kw">def</span> launch_RT_before_running_case(retry=<span class="dig">3</span>):
+    <span class="kw">if</span> retry &lt;= <span class="dig">0</span>:
+        <span class="kw">assert</span> False, \
+            (<span class="str">'After signing in via UI with username "{0}", and searching DB by using this SQL: '</span>
+             <span class="str">'"SELECT connected FROM cloud_user WHERE username = {0}", '</span>
+             <span class="str">'the data field "connected" is not equal to 1'</span>
+             <span class="str">''</span>
+             ).format(account_username)
+
+    log(<span class="str">"Launch RT"</span>)
+    rt.launch()
+
+    time.<span class="skw">sleep</span>(<span class="dig">2</span>)
+    <span class="kw">if</span> <span class="kw">not</span> rt.is_sign_in:
+        log(<span class="str">"Not sign in, start to sign in first"</span>)
+        sign_in()
+
+    time.<span class="skw">sleep</span>(<span class="dig">5</span>)
+    log(<span class="str">"verify if corrent user has signed in to RT from reading DB"</span>)
+    <span class="kw">if</span> <span class="kw">not</span> has_signed_in_from_db(account_username):
+        log(
+            <span class="str">"The incorrect account has signed in to RT, will sign out and sign in with account '"</span> + account_username + <span class="str">"' again"</span>)
+        rt.sign_out()
+        retry -= <span class="dig">1</span>
+        launch_RT_before_running_case(retry)
+        <span class="kw">return</span>
+    log(<span class="str">"set RealTimes to initial status for running case"</span>)
+    assert_step(rt.set_to_init_env())
+
+    log(<span class="str">"uncheck all item in media libary"</span>)
+    uncheck_all_watch_folder_in_media_library_preferences()
+
+
+<span class="kw">def</span> first_launch_RT():
+    <span class="kw">if</span> region.exists(first_launch_warning_dialog, default_wait_time):
+        log(<span class="str">"It's the first time to launch RT"</span>)
+        region.<span class="skw">click</span>(first_lannch_warning_dialog_open_button)
+    <span class="kw">else</span>:
+        log(<span class="str">"It's NOT the first time to launch RT"</span>)
+
+
+<span class="kw">def</span> create_album():
+    log(<span class="str">"Now create album"</span>)
+    <span class="kw">if</span> <span class="kw">not</span> rt.is_sign_in:
+        log(<span class="str">"Not sign in, start to sign in first"</span>)
+        sign_in()
+
+    <span class="cmt"># test clip</span>
+    test_name = <span class="str">"Download.mp4"</span>
+    test_case_path = os.path.join(
+        test_content_path, <span class="str">"original"</span>, test_name)
+    <span class="kw">assert</span> os.path.isfile(test_case_path), <span class="str">"Fail to find test file in '"</span> + test_case_path + <span class="str">"'"</span>
+
+    <span class="cmt"># upload clip to cloud</span>
+    <span class="kw">assert</span> helper.upload_video_via_API(
+        test_case_path), <span class="str">"Fail to upload test file '"</span> + self.test_name + <span class="str">"' via API"</span>
+
+    <span class="cmt"># add the clip to the new created album</span>
+    assert_step(rt.add_item_to_album([download_video_item]))
+
+
+<span class="kw">def</span> drag_drop_folder_to_rt(drag_from_folder):
+    <span class="str">""" drag a folder to rt to let it upload to cloud """</span>
+
+    put_finder_to_right_side_of_screen(drag_from_folder)
+    region.<span class="skw">dragDrop</span>(
+        upload_folder_item_in_finder_icon_view, select_current_view)
+    dismiss_upload_folder_dialog()
+
+
+<span class="kw">def</span> drag_drop_folder_to_transfers_dialog(drag_from_folder):
+    <span class="str">""" drag a folder to transfers dialog, to let it upload to cloud """</span>
+
+    put_finder_to_right_side_of_screen(drag_from_folder)
+    region.<span class="skw">dragDrop</span>(
+        upload_folder_item_in_finder_icon_view, transfer_dialog)
+    dismiss_upload_folder_dialog()
+
+
+<span class="kw">def</span> drag_drop_folder_to_system_tray(drag_from_folder):
+    <span class="str">""" drag a folder to system tray, to let it upload to cloud """</span>
+
+    put_finder_to_right_side_of_screen(drag_from_folder)
+    <span class="skw">dragDrop</span>(
+        upload_folder_item_in_finder_icon_view, system_tray_icon)
+    dismiss_upload_folder_dialog()
+
+
+<span class="kw">def</span> dismiss_upload_folder_dialog():
+    region.<span class="skw">wait</span>(folder_upload_to_cloud_dialog, default_wait_time)
+    <span class="kw">if</span> region.exists(OK_button_selected_10_9):
+        region.<span class="skw">click</span>(OK_button_selected_10_9)
+    <span class="kw">if</span> region.exists(OK_button_selected_10_10):
+        region.<span class="skw">click</span>(OK_button_selected_10_10)
+    region.waitVanish(folder_upload_to_cloud_dialog, default_wait_time)
+
+
+<span class="kw">def</span> clear_all_items_in_transfers_dialog():
+    <span class="str">"""
+    open transfers dialog,
+    clear all items in Transfers dialog,
+    and close it
+    """</span>
+
+    rt.open_transfers_dialog()
+    transfers_dialog = Transfers(region)
+    assert_step(transfers_dialog.clear_all())
+    <span class="skw">type</span>(<span class="str">"w"</span>, Key.CMD)
+    <span class="kw">assert</span> <span class="kw">not</span> transfers_dialog.exists(), <span class="str">"Fail to dismiss 'Transfers' dialog"</span>
+
+
+<span class="kw">def</span> stop_all_items_in_transfers_dialog():
+    <span class="str">"""
+    open transfers dialog,
+    stop all items in Transfers dialog,
+    and close it
+    """</span>
+
+    rt.open_transfers_dialog()
+    transfers_dialog = Transfers(region)
+    assert_step(transfers_dialog.pause_all())
+    <span class="skw">type</span>(<span class="str">"w"</span>, Key.CMD)
+    <span class="kw">assert</span> <span class="kw">not</span> transfers_dialog.exists(), <span class="str">"Fail to dismiss 'Transfers' dialog"</span>
+
+
+<span class="kw">def</span> stop_and_resume_items_in_transfers_dialog():
+    <span class="str">"""
+    open transfers dialog,
+    stop all items, and resume all items,
+    and close it
+    """</span>
+
+    rt.open_transfers_dialog()
+    transfers_dialog = Transfers(region)
+    assert_step(transfers_dialog.pause_all())
+    assert_step(transfers_dialog.resume_all())
+    <span class="skw">type</span>(<span class="str">"w"</span>, Key.CMD)
+    <span class="kw">assert</span> <span class="kw">not</span> transfers_dialog.exists(), <span class="str">"Fail to dismiss 'Transfers' dialog"</span>
+
+
+<span class="kw">def</span> stop_and_resume_items_in_systray():
+    <span class="str">"""
+    stop all items and resume all item
+    """</span>
+
+    system_tray.pause()
+    time.<span class="skw">sleep</span>(<span class="dig">10</span>)
+    system_tray.resume()
+
+
+<span class="kw">def</span> put_transfers_dialog_to_left_side_of_screen():
+    rt.open_transfers_dialog()
+    os.system(
+        <span class="str">"osascript "</span> + os.path.join(applescript_path, <span class="str">"put_transfers_dialog_to_left_side_of_screen.applescript"</span>))
+
+
+<span class="kw">def</span> uncheck_all_watch_folder_in_media_library_preferences():
+    os.system(
+        <span class="str">"osascript "</span> + os.path.join(applescript_path, <span class="str">"uncheck_all_watch_folder.applescript"</span>))
+
+
+<span class="kw">def</span> check_one_item_in_media_library_preferences(name):
+    os.system(
+        <span class="str">"osascript "</span> + os.path.join(applescript_path, <span class="str">"select_one_item_in_media_library.applescript"</span>) + <span class="str">" "</span> + name)
+
+
+<span class="kw">def</span> drag_drop_clips_to_library(test_content_path, *clips):
+    log(<span class="str">"Navigate to test content path"</span>)
+    put_finder_to_right_side_of_screen(test_content_path)
+
+    <span class="kw">for</span> clip <span class="kw">in</span> clips:
+        <span class="kw">assert</span> region.exists(clip,
+                             default_wait_time), <span class="str">"Fail to find test clip from screen before doing Drag&amp;Drop operation"</span>
+        log(<span class="str">"Drag drop a clip to RT"</span>)
+        region.<span class="skw">dragDrop</span>(clip, select_current_view)
+
+
+<span class="kw">def</span> drag_drop_clips_to_transfers_dialog(test_content_path, *clips):
+    log(<span class="str">"Navigate to test content path"</span>)
+    put_finder_to_right_side_of_screen(test_content_path)
+
+    <span class="kw">for</span> clip <span class="kw">in</span> clips:
+        <span class="kw">assert</span> region.exists(clip,
+                             default_wait_time), <span class="str">"Fail to find test clip from screen before doing Drag&amp;Drop operation"</span>
+        log(<span class="str">"Drag drop a clip to transfers dialog"</span>)
+        region.<span class="skw">dragDrop</span>(clip, transfer_dialog)
+
+
+<span class="kw">def</span> drag_drop_clips_to_system_tray(test_content_path, *clips):
+    log(<span class="str">"Navigate to test content path"</span>)
+    put_finder_to_right_side_of_screen(test_content_path)
+
+    <span class="kw">for</span> clip <span class="kw">in</span> clips:
+        <span class="kw">assert</span> region.exists(clip,
+                             default_wait_time), <span class="str">"Fail to find test clip from screen before doing Drag&amp;Drop operation"</span>
+        log(<span class="str">"Drag drop a clip to system tray"</span>)
+        <span class="skw">dragDrop</span>(clip, system_tray_icon)
+
+
+<span class="kw">def</span> switch_to_account2():
+    <span class="cmt"># sign out account, then sign in account2</span>
+    <span class="cmt"># You'd better use switch_to_account directly.</span>
+    <span class="kw">if</span> rt.is_sign_in:
+        rt.sign_out()
+
+    rt.launch()
+    sign_in(account_username2, account_password2)
+    log(<span class="str">"After sign in"</span>)
+
+    <span class="kw">assert</span> region.exists(
+        has_signed_in_rt_top_bar,
+        default_wait_time), <span class="str">"Fail to sign in with another test account '"</span> + account_username2 + <span class="str">"'"</span>
+
+
+<span class="kw">def</span> switch_to_account(account=account_username2, password=account_password2):
+    <span class="str">'''
+    account: specify a account to switch to
+    '''</span>
+    <span class="kw">if</span> rt.is_sign_in:
+        rt.sign_out()
+
+    rt.launch()
+    sign_in(account, password)
+    log(<span class="str">"after sign in"</span>)
+
+    <span class="kw">assert</span> region.exists(has_signed_in_rt_top_bar, default_wait_time), <span class="str">"Has not signed in to cloud"</span>
+</pre>
+</body>
+</html>

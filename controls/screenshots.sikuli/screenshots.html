@@ -1,0 +1,260 @@
+
+<html>
+   <head>
+      <style type="text/css">
+         .sikuli-code {
+            font-size: 20px;
+            font-family: "Osaka-mono", Monospace;
+            line-height: 1.5em;
+            display:table-cell;
+            white-space: pre-wrap;       /* css-3 */
+            white-space: -moz-pre-wrap !important;  /* Mozilla, since 1999 */
+            white-space: -pre-wrap;      /* Opera 4-6 */
+            white-space: -o-pre-wrap;    /* Opera 7 */
+            word-wrap: break-word;       /* Internet Explorer 5.5+ */
+            width: 99%;   /* remove horizontal scroll-bar when viewing in IE7 */
+         }
+         .sikuli-code img {
+            vertical-align: middle;
+            margin: 2px;
+            border: 1px solid #ccc;
+            padding: 2px;
+            -moz-border-radius: 5px;
+            -webkit-border-radius: 5px;
+            -moz-box-shadow: 1px 1px 1px gray;
+            -webkit-box-shadow: 1px 1px 2px gray;
+         }
+         .kw {
+            color: blue;
+         }
+         .skw {
+            color: rgb(63, 127, 127);
+         }
+
+         .str {
+            color: rgb(128, 0, 0);
+         }
+
+         .dig {
+            color: rgb(128, 64, 0);
+         }
+
+         .cmt {
+            color: rgb(200, 0, 200);
+         }
+
+         h2 {
+            display: inline;
+            font-weight: normal;
+         }
+
+         .info {
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+            margin-bottom: 20px;
+            display: none;
+         }
+
+         a {
+            color: #9D2900;
+         }
+
+         body {
+            font-family: "Trebuchet MS", Arial, Sans-Serif;
+         }
+
+      </style>
+   </head>
+<body>
+<div class="info">
+<h2>screenshots.sikuli</h2> <a href="screenshots.zip">(Download this script)</a>
+</div>
+<pre class="sikuli-code">
+<span class="kw">from</span> sikuli <span class="kw">import</span> *
+<span class="kw">import</span> helper
+
+<span class="cmt"># Get width and heigth of screen by applescripts</span>
+width_of_screen = helper.get_bounds_of_screen()[<span class="dig">0</span>]
+height_of_screen = helper.get_bounds_of_screen()[<span class="dig">1</span>]
+
+<span class="cmt"># Height of top menu bar</span>
+height_of_top_menu_bar = <span class="dig">24</span>
+
+<span class="cmt"># Get height of dock by applescripts</span>
+height_of_dock = helper.get_height_of_dock()
+
+<span class="cmt"># Region of screen, without top menu bar and dock</span>
+region = Region(<span class="dig">0</span>, height_of_top_menu_bar, width_of_screen,
+                height_of_screen - height_of_top_menu_bar - height_of_dock)
+<span class="kw">print</span> <span class="str">"region size is ({0}, {1}, {2}, {3})"</span>.format(region.x, region.y, region.w, region.h)
+
+<span class="cmt"># Region for top menu bar region</span>
+top_menu_bar_region = Region(
+    <span class="dig">0</span>, <span class="dig">0</span>, helper.get_bounds_of_screen()[<span class="dig">0</span>], height_of_top_menu_bar)
+
+<span class="cmt"># First launch realtimes</span>
+first_launch_warning_dialog = <img src="first_launch_warning_dialog.png" />
+first_lannch_warning_dialog_open_button = <img src="first_lannch_warning_dialog_open_button.png" />
+
+<span class="cmt"># Sign in panel</span>
+sign_in_button = <img src="sign_in_button.png" />
+username_textbox = <img src="username_textbox.png" />
+username_textbox_with_last_account = <img src="username_textbox_with_last_account.png" />
+password_textbox = <img src="password_textbox.png" />
+sign_in_button2 = <img src="sign_in_button2.png" />
+sign_in_get_started = <img src="sign_in_get_started.png" />
+welcome_page_recommended = <img src="welcome_page_recommended.png" />
+welcome_page_get_started = <img src="welcome_page_get_started.png" />
+
+<span class="cmt"># RT main window</span>
+<span class="cmt"># &gt;&gt;&gt;Top bar:</span>
+account_setting_button_top_bar = <img src="account_setting_button_top_bar.png" />
+has_signed_in_rt_top_bar = account_setting_button_top_bar
+sign_out_button_in_account_setting_button_top_bar = <img src="sign_out_button_in_account_setting_button_top_bar.png" />
+<span class="cmt"># &gt;&gt;&gt;Top tab bar:</span>
+content_location_switcher_all_selected = <img src="content_location_switcher_all_selected.png" />
+content_location_switcher_cloud_selected = <img src="content_location_switcher_cloud_selected.png" />
+content_location_switcher_mymac_selected = <img src="content_location_switcher_mymac_selected.png" />
+content_location_switcher_watched_selected = <img src="content_location_switcher_watched_selected.png" />
+content_location_switcher_uploaded_selected = <img src="content_location_switcher_uploaded_selected.png" />
+content_location_switcher_stories_suggested_selected = <img src="content_location_switcher_stories_suggested_selected.png" />
+content_location_switcher_stories_saved_selected = <img src="content_location_switcher_stories_saved_selected.png" />
+content_location_switcher_stories_cloud_selected = <img src="content_location_switcher_stories_cloud_selected.png" />
+share_everyone_item = <img src="share_everyone_item.png" />
+share_by_me_dropdown_list_item = <img src="share_by_me_dropdown_list_item.png" />
+<span class="cmt"># &gt;&gt;&gt;Navigation bar:</span>
+photos_and_videos_button_selected = <img src="photos_and_videos_button_selected.png" />
+photos_and_videos_button_unselected = <img src="photos_and_videos_button_unselected.png" />
+my_albums_button_selected = <img src="my_albums_button_selected.png" />
+my_albums_button_unselected = <img src="my_albums_button_unselected.png" />
+stories_button_selected = <img src="stories_button_selected.png" />
+stories_button_unselected = <img src="stories_button_unselected.png" />
+sharing_button_selected = Pattern(<img src="sharing_button_selected.png" />).similar(<span class="dig">0.50</span>)
+sharing_button_unselected = <img src="sharing_button_unselected.png" />
+recent_activity_selected = <img src="recent_activity_selected.png" />
+recent_activity_unselected = <img src="recent_activity_unselected.png" />
+<span class="cmt"># &gt;&gt;&gt;Bottom bar:</span>
+transfers_button = <img src="transfers_button.png" />
+transfers_button_in_progress = <img src="transfers_button_in_progress.png" />
+plus_button = <img src="plus_button.png" />
+
+<span class="cmt"># System tray</span>
+system_tray_icon = Pattern(<img src="system_tray_icon.png" />).similar(<span class="dig">0.55</span>)
+system_tray_signout = <img src="system_tray_signout.png" />
+system_tray_quit = <img src="system_tray_quit.png" />
+system_tray_signin_10_9 = <img src="system_tray_signin_10_9.png" />
+system_tray_signin_10_10 = <img src="system_tray_signin_10_10.png" />
+system_tray_pause = <img src="system_tray_pause.png" />
+system_tray_resume = <img src="system_tray_resume.png" />
+
+<span class="cmt"># Items in view</span>
+<span class="cmt"># &gt;&gt;&gt;Items in libary view:</span>
+no_photos_or_videos = <img src="no_photos_or_videos.png" />
+download_video_item = <img src="download_video_item.png" />
+upload_video_item = <img src="upload_item.png" />
+upload_photo_item = <img src="upload_photo_item.png" />
+rename_video_item = <img src="rename_video_item.png" />
+rename_text_item = <img src="rename_text_item.png" />
+rename_collection_item = <img src="rename_collection_item.png" />
+rename_collection_title = <img src="rename_collection_title.png" />
+newname_collection_title = <img src="newname_collection_title.png" />
+share_video_item1 = <img src="share_video_item1.png" />
+share_video_item2 = download_video_item
+share_photo_item1 = <img src="share_photo_item1.png" />
+share_photo_item2 = <img src="share_photo_item2.png" />
+play_local_item = <img src="play_local_item.png" />
+play_cloud_local_item = <img src="play_cloud_local_item.png" />
+media_scan_item = <img src="media_scan_item.png" />
+play_in_player_item = <img src="play_in_player_item.png" />
+
+<span class="cmt"># &gt;&gt;&gt;Stories</span>
+suggested_story_icon = <img src="suggested_story_icon.png" />
+story_item = <img src="story_item.png" />
+story_save_button = <img src="story_save_button.png" />
+story_play_nums = [<img src="pre_roll_story.png" />, <img src="story_play_num_1.png" />, <img src="story_play_num_2.png" />, <img src="story_play_num_3.png" />, <img src="post_roll_story.png" />]
+story_play_items = [<img src="story_play_item_1.png" />, <img src="story_play_item_2.png" />, <img src="story_play_item_3.png" />]
+
+<span class="cmt"># &gt;&gt;&gt;Play with slideshow </span>
+slideshow_play_items = [<img src="slideshow_play_item1.png" />, <img src="slideshow_play_item2.png" />, <img src="slideshow_play_item3.png" />]
+slideshow_left_arrows_button = <img src="slideshow_left_arrows_button.png" />
+slideshow_album_item = <img src="slideshow_album_item.png" />
+
+<span class="cmt"># &gt;&gt;&gt;Items in gallery view:</span>
+upload_photo_item_in_gallery_view = <img src="upload_photo_item_in_gallery_view.png" />
+rename_video_item_in_gallery_view = <img src="rename_video_item_in_gallery_view.png" />
+newname_video_item_in_gallery_view = <img src="newname_video_item_in_gallery_view.png" />
+<span class="cmt"># &gt;&gt;&gt;Items in finder, icon view, default icon size:</span>
+upload_photo_item_in_finder_icon_view = <img src="upload_photo_item_in_finder_icon_view.png" />
+upload_video_item_in_finder_icon_view = <img src="upload_video_item_in_finder_icon_view.png" />
+upload_folder_item_in_finder_icon_view = <img src="upload_folder_item_in_finder_icon_view.png" />
+<span class="cmt"># &gt;&gt;&gt;Items in album view:</span>
+test_album_item = download_video_item
+shared_album_item = <img src="shared_album_item.png" />
+<span class="cmt"># &gt;&gt;&gt;Items in sharing library view:</span>
+new_shared_media_item = shared_album_item
+shared_media_item = download_video_item
+
+<span class="cmt"># Playback mode</span>
+play_in_separate_window_button = <img src="play_in_separate_window_button.png" />
+play_as_slideshow_button = <img src="play_as_slideshow.png" />
+exit_gallery_button = <img src="exit_gallery_button.png" />
+pause_button = <img src="pause_button.png" />
+play_button = Pattern(<img src="play_button.png" />).similar(<span class="dig">0.81</span>)
+<span class="cmt"># &gt;&gt;&gt;Separate window:</span>
+play_item_title_in_separate_window = <img src="play_item_title_in_separate_window.png" />
+share_button_in_separate_window = <img src="share_button_in_separate_window.png" />
+
+<span class="cmt"># Player window</span>
+upload_button_in_player_window = <img src="upload_button_in_player_window.png" />
+download_button_in_player_window = <img src="download_button_in_player_window.png" />
+
+<span class="cmt"># Delete radio button</span>
+delete_from_this_mac_radio_button = Pattern(
+    <img src="delete_from_this_mac_radio_button.png" />).exact()
+
+<span class="cmt"># Select current view</span>
+select_current_view = Pattern(<img src="select_current_view.png" />).targetOffset(<span class="dig">0</span>,<span class="dig">46</span>)
+
+<span class="cmt"># Add to album dialog</span>
+new_album_dialog_button = <img src="new_album_dialog_button.png" />
+album_item_dialog_icon = <img src="album_item_dialog_icon.png" />
+
+<span class="cmt"># Share dialog</span>
+enter_names_text_box =  <img src="enter_names_text_box.png" />
+write_something_text_box = <img src="write_something_text_box.png" />
+share_button_of_share_dialog = <img src="share_button_of_share_dialog.png" />
+
+share_success_text = <img src="share_success_text.png" />
+close_button_of_share_dialog = <img src="close_button_of_share_dialog.png" />
+
+<span class="cmt"># Folder upload to cloud dialog</span>
+folder_upload_to_cloud_dialog = Pattern(<img src="folder_upload_to_cloud_dialog.png" />).similar(<span class="dig">0.56</span>)
+
+<span class="cmt"># Transfer dialog</span>
+transfer_dialog = <img src="transfer_dialog.png" />
+transfer_dialog_clear_completed_button = <img src="transfer_dialog_clear_completed_button.png" />
+transfer_dialog_resume_button = Pattern(<img src="transfer_dialog_resume_button.png" />).similar(<span class="dig">0.73</span>)
+transfer_dialog_cancel_button = Pattern(<img src="transfer_dialog_cancel_button.png" />).similar(<span class="dig">0.87</span>)
+transfer_dialog_pause_button = Pattern(<img src="transfer_dialog_pause_button.png" />).similar(<span class="dig">0.85</span>)
+transfer_dialog_no_item = <img src="transfer_dialog_no_item.png" />
+
+<span class="cmt"># Like/unlike button</span>
+like_button = <img src="like_button.png" />
+unlike_button = <img src="unlike_button.png" />
+one_like_message = <img src="one_like_message.png" />
+
+share_group_button = <img src="share_group_button.png" />
+share_group_item = <img src="share_group_item.png" />
+back_button = <img src="back_button.png" />
+
+<span class="cmt"># Notification</span>
+download_complete_notification_10_10 = <img src="download_complete_notification_10_10.png" />
+download_complete_notification_10_9 = <img src="download_complete_notification_10_9.png" />
+new_photo_found_notification_10_10 = <img src="new_photo_found_notification_10_10.png" />
+new_photo_found_notification_10_9 = <img src="new_photo_found_notification_10_9.png" />
+upload_complete_notification_10_10 = <img src="upload_complete_notification_10_10.png" />
+upload_complete_notification_10_9 = <img src="upload_complete_notification_10_9.png" />
+no_network_notification = Pattern(<img src="no_network_notification.png" />).similar(<span class="dig">0.60</span>)
+</pre>
+</body>
+</html>

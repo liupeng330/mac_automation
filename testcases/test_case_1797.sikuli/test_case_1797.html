@@ -1,0 +1,146 @@
+
+<html>
+   <head>
+      <style type="text/css">
+         .sikuli-code {
+            font-size: 20px;
+            font-family: "Osaka-mono", Monospace;
+            line-height: 1.5em;
+            display:table-cell;
+            white-space: pre-wrap;       /* css-3 */
+            white-space: -moz-pre-wrap !important;  /* Mozilla, since 1999 */
+            white-space: -pre-wrap;      /* Opera 4-6 */
+            white-space: -o-pre-wrap;    /* Opera 7 */
+            word-wrap: break-word;       /* Internet Explorer 5.5+ */
+            width: 99%;   /* remove horizontal scroll-bar when viewing in IE7 */
+         }
+         .sikuli-code img {
+            vertical-align: middle;
+            margin: 2px;
+            border: 1px solid #ccc;
+            padding: 2px;
+            -moz-border-radius: 5px;
+            -webkit-border-radius: 5px;
+            -moz-box-shadow: 1px 1px 1px gray;
+            -webkit-box-shadow: 1px 1px 2px gray;
+         }
+         .kw {
+            color: blue;
+         }
+         .skw {
+            color: rgb(63, 127, 127);
+         }
+
+         .str {
+            color: rgb(128, 0, 0);
+         }
+
+         .dig {
+            color: rgb(128, 64, 0);
+         }
+
+         .cmt {
+            color: rgb(200, 0, 200);
+         }
+
+         h2 {
+            display: inline;
+            font-weight: normal;
+         }
+
+         .info {
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+            margin-bottom: 20px;
+            display: none;
+         }
+
+         a {
+            color: #9D2900;
+         }
+
+         body {
+            font-family: "Trebuchet MS", Arial, Sans-Serif;
+         }
+
+      </style>
+   </head>
+<body>
+<div class="info">
+<h2>test_case_1797.sikuli</h2> <a href="test_case_1797.zip">(Download this script)</a>
+</div>
+<pre class="sikuli-code">
+<span class="kw">from</span> nose.plugins.attrib <span class="kw">import</span> attr
+<span class="kw">from</span> helper <span class="kw">import</span> *
+<span class="kw">from</span> sikuli <span class="kw">import</span> *
+<span class="kw">from</span> global_config <span class="kw">import</span> *
+
+<span class="kw">from</span> controls.sign_in_control <span class="kw">import</span> *
+<span class="kw">from</span> controls.rt_control <span class="kw">import</span> *
+<span class="kw">from</span> controls.system_tray_control <span class="kw">import</span> *
+
+<span class="kw">import</span> ops.operations <span class="kw">as</span> op
+
+<span class="kw">from</span> base <span class="kw">import</span> *
+
+
+<span class="kw">class</span> TestCase_1797(TestCase_Base):
+
+    <span class="str">""" Sharing: A share multi videos and photos to B """</span>
+
+    <span class="kw">def</span> _check_items_exists(self):
+        <span class="cmt"># verify test clips are all in the view</span>
+        log(<span class="str">"Verify test clip is in the view"</span>)
+        <span class="kw">assert</span> region.exists(
+            share_video_item1, default_wait_time), <span class="str">"Fail to find thumbnail of test clip 'share_video_1.mp4' in cloud view"</span>
+        <span class="kw">assert</span> region.exists(
+            share_video_item2, default_wait_time), <span class="str">"Fail to find thumbnail of test clip 'share_video_2.mp4' in cloud view"</span>
+        <span class="kw">assert</span> region.exists(
+            share_photo_item1, default_wait_time), <span class="str">"Fail to find thumbnail of test clip 'share_photo_1.jpg' in cloud view"</span>
+        <span class="kw">assert</span> region.exists(
+            share_photo_item2, default_wait_time), <span class="str">"Fail to find thumbnail of test clip 'share_photo_2.jpg' in cloud view"</span>
+
+    <span class="kw">def</span> setUp(self):
+        <span class="kw">try</span>:
+            TestCase_Base.setUp(self)
+
+            <span class="cmt"># test clip</span>
+            self.test_files = [<span class="str">"share_video_1.mp4"</span>, <span class="str">"share_video_2.mp4"</span>, <span class="str">"share_photo_1.jpg"</span>, <span class="str">"share_photo_2.jpg"</span>]
+
+            <span class="cmt"># upload test files to cloud</span>
+            upload_video_files_via_API(*self.test_files[<span class="dig">0</span>:<span class="dig">2</span>])
+            upload_photo_files_via_API(*self.test_files[<span class="dig">2</span>:])
+
+            log(<span class="str">"Start to verify if RT is signed in or not"</span>)
+            <span class="kw">if</span> self.RT.is_sign_in:
+                log(<span class="str">"RT has been signed in already, start to sign out"</span>)
+                self.RT.sign_out()
+            op.launch_RT_before_running_case()
+        <span class="kw">except</span>:
+            TestCase_Base.tearDown(self)
+            <span class="kw">raise</span>
+
+    @attr(<span class="str">'BVT'</span>)
+    <span class="kw">def</span> test_share_multi_videos_and_photos(self):
+        <span class="cmt"># switch to cloud view</span>
+        assert_step(self.RT.switch_to_cloud_view())
+
+        <span class="cmt"># verify upload</span>
+        self._check_items_exists()
+
+        <span class="cmt"># share multi video and photos</span>
+        assert_step(self.RT.share_media_in_library_view([share_video_item1, share_video_item2, share_photo_item1, share_photo_item2]))
+
+        <span class="cmt"># switch to another account</span>
+        op.switch_to_account2()
+
+        <span class="cmt"># verify the shared item is in the view</span>
+        assert_step(self.RT.switch_to_shared_with_me_view())
+        assert_step(self.RT.open_share_group(share_group_item))
+        self._check_items_exists()
+
+    <span class="kw">def</span> tearDown(self):
+        TestCase_Base.tearDown(self)
+</pre>
+</body>
+</html>

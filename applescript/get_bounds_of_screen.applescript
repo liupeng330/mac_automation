@@ -1,0 +1,1 @@
+tell app "Finder" to get bounds of window of desktop

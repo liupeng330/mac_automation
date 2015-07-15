@@ -1,0 +1,126 @@
+
+<html>
+   <head>
+      <style type="text/css">
+         .sikuli-code {
+            font-size: 20px;
+            font-family: "Osaka-mono", Monospace;
+            line-height: 1.5em;
+            display:table-cell;
+            white-space: pre-wrap;       /* css-3 */
+            white-space: -moz-pre-wrap !important;  /* Mozilla, since 1999 */
+            white-space: -pre-wrap;      /* Opera 4-6 */
+            white-space: -o-pre-wrap;    /* Opera 7 */
+            word-wrap: break-word;       /* Internet Explorer 5.5+ */
+            width: 99%;   /* remove horizontal scroll-bar when viewing in IE7 */
+         }
+         .sikuli-code img {
+            vertical-align: middle;
+            margin: 2px;
+            border: 1px solid #ccc;
+            padding: 2px;
+            -moz-border-radius: 5px;
+            -webkit-border-radius: 5px;
+            -moz-box-shadow: 1px 1px 1px gray;
+            -webkit-box-shadow: 1px 1px 2px gray;
+         }
+         .kw {
+            color: blue;
+         }
+         .skw {
+            color: rgb(63, 127, 127);
+         }
+
+         .str {
+            color: rgb(128, 0, 0);
+         }
+
+         .dig {
+            color: rgb(128, 64, 0);
+         }
+
+         .cmt {
+            color: rgb(200, 0, 200);
+         }
+
+         h2 {
+            display: inline;
+            font-weight: normal;
+         }
+
+         .info {
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+            margin-bottom: 20px;
+            display: none;
+         }
+
+         a {
+            color: #9D2900;
+         }
+
+         body {
+            font-family: "Trebuchet MS", Arial, Sans-Serif;
+         }
+
+      </style>
+   </head>
+<body>
+<div class="info">
+<h2>system_tray_control.sikuli</h2> <a href="system_tray_control.zip">(Download this script)</a>
+</div>
+<pre class="sikuli-code">
+<span class="kw">from</span> sikuli <span class="kw">import</span> *
+<span class="kw">from</span> controls.screenshots <span class="kw">import</span> *
+<span class="kw">from</span> helper <span class="kw">import</span> *
+<span class="kw">from</span> global_config <span class="kw">import</span> *
+
+<span class="kw">class</span> SystemTray(object):
+
+    <span class="kw">def</span> __init__(self, region):
+        self.region = region
+
+    <span class="kw">def</span> sign_in(self):
+        self.click_system_tray()
+        log(<span class="str">"click sign in menu item from system tray"</span>)
+
+        <span class="cmt"># Need to use default screen region due to popup menu isn't shown in</span>
+        <span class="cmt"># top menu area</span>
+        <span class="kw">if</span> osx_version == <span class="str">"10.10"</span>:
+            region.<span class="skw">click</span>(system_tray_signin_10_10)
+        <span class="kw">elif</span> osx_version == <span class="str">"10.9"</span>:
+            region.<span class="skw">click</span>(system_tray_signin_10_9)
+
+    <span class="kw">def</span> sign_out(self):
+        self.click_system_tray()
+        log(<span class="str">"click sign out menu item from system tray"</span>)
+        <span class="cmt"># Need to use default screen region due to popup menu isn't shown in</span>
+        <span class="cmt"># top menu area</span>
+        <span class="skw">click</span>(system_tray_signout)
+
+    <span class="kw">def</span> quit(self):
+        self.click_system_tray()
+        log(<span class="str">"click quit menu item from system tray"</span>)
+        <span class="skw">click</span>(system_tray_quit)
+
+    <span class="kw">def</span> pause(self):
+        self.click_system_tray()
+        log(<span class="str">"click pause menu item from system tray"</span>)
+        <span class="skw">click</span>(system_tray_pause)
+
+    <span class="kw">def</span> resume(self):
+        self.click_system_tray()
+        log(<span class="str">"click resume menu item from system tray"</span>)
+        <span class="skw">click</span>(system_tray_resume)
+
+    <span class="kw">def</span> click_system_tray(self):
+        log(<span class="str">"click RT icon on system tray"</span>)
+        self.region.<span class="skw">click</span>(system_tray_icon)
+
+
+<span class="kw">if</span> __name__ == <span class="str">"__main__"</span>:
+    s = SystemTray(top_menu_bar_region)
+    s.quit()
+</pre>
+</body>
+</html>

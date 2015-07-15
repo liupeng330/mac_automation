@@ -1,0 +1,209 @@
+
+<html>
+   <head>
+      <style type="text/css">
+         .sikuli-code {
+            font-size: 20px;
+            font-family: "Osaka-mono", Monospace;
+            line-height: 1.5em;
+            display:table-cell;
+            white-space: pre-wrap;       /* css-3 */
+            white-space: -moz-pre-wrap !important;  /* Mozilla, since 1999 */
+            white-space: -pre-wrap;      /* Opera 4-6 */
+            white-space: -o-pre-wrap;    /* Opera 7 */
+            word-wrap: break-word;       /* Internet Explorer 5.5+ */
+            width: 99%;   /* remove horizontal scroll-bar when viewing in IE7 */
+         }
+         .sikuli-code img {
+            vertical-align: middle;
+            margin: 2px;
+            border: 1px solid #ccc;
+            padding: 2px;
+            -moz-border-radius: 5px;
+            -webkit-border-radius: 5px;
+            -moz-box-shadow: 1px 1px 1px gray;
+            -webkit-box-shadow: 1px 1px 2px gray;
+         }
+         .kw {
+            color: blue;
+         }
+         .skw {
+            color: rgb(63, 127, 127);
+         }
+
+         .str {
+            color: rgb(128, 0, 0);
+         }
+
+         .dig {
+            color: rgb(128, 64, 0);
+         }
+
+         .cmt {
+            color: rgb(200, 0, 200);
+         }
+
+         h2 {
+            display: inline;
+            font-weight: normal;
+         }
+
+         .info {
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+            margin-bottom: 20px;
+            display: none;
+         }
+
+         a {
+            color: #9D2900;
+         }
+
+         body {
+            font-family: "Trebuchet MS", Arial, Sans-Serif;
+         }
+
+      </style>
+   </head>
+<body>
+<div class="info">
+<h2>test_case_2164.sikuli</h2> <a href="test_case_2164.zip">(Download this script)</a>
+</div>
+<pre class="sikuli-code">
+<span class="kw">from</span> nose.plugins.attrib <span class="kw">import</span> attr
+<span class="kw">from</span> helper <span class="kw">import</span> *
+<span class="kw">from</span> sikuli <span class="kw">import</span> *
+<span class="kw">from</span> global_config <span class="kw">import</span> *
+
+<span class="kw">from</span> controls.sign_in_control <span class="kw">import</span> *
+<span class="kw">from</span> controls.rt_control <span class="kw">import</span> *
+<span class="kw">from</span> controls.system_tray_control <span class="kw">import</span> *
+<span class="kw">from</span> controls.player_control <span class="kw">import</span> *
+
+<span class="kw">import</span> ops.operations <span class="kw">as</span> op
+
+<span class="kw">from</span> base <span class="kw">import</span> *
+<span class="kw">from</span> datetime <span class="kw">import</span> datetime
+<span class="kw">from</span> threading <span class="kw">import</span> Thread
+
+
+<span class="kw">class</span> TestCase_2164(TestCase_Base):
+
+    <span class="str">""" Story: Create and Publish a RealTime Story """</span>
+
+    <span class="kw">def</span> _check_items_exists(self):
+        <span class="cmt"># verify test clips are all in the view</span>
+        log(<span class="str">"Verify test clip is in the view"</span>)
+        <span class="kw">for</span> i <span class="kw">in</span> range(len(story_play_items)):
+            <span class="kw">assert</span> region.exists(story_play_items[i], default_wait_time), <span class="str">"Fail to find screenshot of number "</span> + str(i + <span class="dig">1</span>) + <span class="str">"in library view"</span>
+
+    <span class="kw">def</span> setUp(self):
+        <span class="kw">try</span>:
+            TestCase_Base.setUp(self)
+            self.player = Player(region)
+        <span class="kw">except</span>:
+            TestCase_Base.tearDown(self)
+            <span class="kw">raise</span>
+
+    <span class="kw">def</span> _create_story(self):
+        op.launch_RT_before_running_case()
+
+        log(<span class="str">"Remove all items first"</span>)
+        assert_step(self.RT.remove_all())
+
+        <span class="cmt"># test clip</span>
+        self.test_files = [<span class="str">"Playback_1_1.mp4"</span>, <span class="str">"Playback_1_2.mp4"</span>, <span class="str">"Playback_2_1.mp4"</span>, <span class="str">"Playback_2_2.mp4"</span>, <span class="str">"Playback_3_1.mp4"</span>, <span class="str">"Playback_3_2.mp4"</span>]
+
+        <span class="cmt"># upload test files to cloud</span>
+        upload_video_files_via_API(*self.test_files)
+
+        <span class="cmt"># switch to cloud view</span>
+        assert_step(self.RT.switch_to_cloud_view())
+
+        <span class="cmt"># verify upload</span>
+        self._check_items_exists()
+
+        log(<span class="str">"Switch to 'Stories -&gt; Suggested' view"</span>)
+        self.RT.switch_to_stories_suggested_view()
+
+        log(<span class="str">"Verify whether suggested story exists or not"</span>)
+        <span class="kw">assert</span> region.exists(suggested_story_icon, default_wait_time), <span class="str">"Fail to find 'Suggested story icon' in 'Stories -&gt; Suggested' view"</span>
+
+    @attr(<span class="str">'BVT'</span>)
+    <span class="kw">def</span> test_create_and_preview_story(self):
+        self._create_story()
+
+        log(<span class="str">"Preview it"</span>)
+        self.RT.play_video(suggested_story_icon)
+
+        log(<span class="str">"Verify test clip is played"</span>)
+        assert_step(self.RT.wait_till_start_playing())
+
+        log(<span class="str">"Restore the window size of RealTimes"</span>)
+        self.RT.restore_windows_size()
+
+        log(<span class="str">"Set value of playing process bar value to 0"</span>)
+        self.RT.reset_play_process_bar()
+
+        log(<span class="str">"Verify playback"</span>)
+        self._verify_playback()
+
+    @attr(<span class="str">'BVT'</span>)
+    <span class="kw">def</span> test_create_and_publish_story(self):
+        self._create_story()
+
+        log(<span class="str">"Upload suggested story to cloud"</span>)
+        self.RT.upload_video(suggested_story_icon)
+
+        expected_story_name = datetime.now().strftime(<span class="str">"%B %d, %Y"</span>)
+        log(<span class="str">"Verify whether suggested story with name '{0}' is uploaded to cloud or not"</span>.format(expected_story_name))
+        <span class="kw">assert</span> wait_for_upload_complete(expected_story_name, <span class="dig">60</span> * <span class="dig">5</span>), <span class="str">"Fail to find story '{0}' from cloud, after waiting for 5 minutes"</span>.format(expected_story_name)
+
+        expected_story_file_name = os.path.join(saved_stories_folder, expected_story_name + <span class="str">".mp4"</span>)
+        log(<span class="str">"Verify whether saved story '{0}' exists in local system"</span>.format(expected_story_file_name))
+        <span class="kw">assert</span> os.path.exists(expected_story_file_name), <span class="str">"Fail to find saved story file '{0}'"</span>.format(expected_story_file_name)
+
+        log(<span class="str">"Switch to 'Stories -&gt; Cloud' view"</span>)
+        self.RT.switch_to_stories_cloud_view()
+        <span class="kw">assert</span> region.exists(story_item, default_wait_time), <span class="str">"Fail to find uploaded story item in 'Stories -&gt; Cloud' view"</span>
+
+        log(<span class="str">"Play it"</span>)
+        self.RT.play_video(story_item)
+
+        log(<span class="str">"Verify test clip is played"</span>)
+        assert_step(self.RT.verify_rt_is_playing_video())
+
+        log(<span class="str">"Click 'play_in_separate_window_button'"</span>)
+        self.RT.play_in_seperate_window()
+
+        log(<span class="str">"Wait player start to play"</span>)
+        assert_step(self.player.wait_till_start_playing())
+
+        log(<span class="str">"Set player window to original size"</span>)
+        self.player.set_to_original_size()
+
+        log(<span class="str">"Restart to play"</span>)
+        self.player.restart()
+
+        log(<span class="str">"Verify playback"</span>)
+        self._verify_playback()
+
+    @attr(<span class="str">'BVT'</span>)
+    <span class="kw">def</span> test_share_story(self):
+        <span class="kw">raise</span> NotImplementedError
+        self._create_story()
+
+        log(<span class="str">"Share story"</span>)
+        assert_step(self.RT.share_story(suggested_story_icon, wait_time=<span class="dig">60</span>*<span class="dig">5</span>))
+
+    <span class="kw">def</span> _verify_playback(self):
+        play_verify = VerifyPlay(<span class="dig">30</span>, *story_play_nums)
+        play_verify.start()
+        play_verify.<span class="skw">wait</span>()
+        assert_step(play_verify.verify_result())
+
+    <span class="kw">def</span> tearDown(self):
+        TestCase_Base.tearDown(self)
+</pre>
+</body>
+</html>

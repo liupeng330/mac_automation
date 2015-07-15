@@ -1,0 +1,152 @@
+
+<html>
+   <head>
+      <style type="text/css">
+         .sikuli-code {
+            font-size: 20px;
+            font-family: "Osaka-mono", Monospace;
+            line-height: 1.5em;
+            display:table-cell;
+            white-space: pre-wrap;       /* css-3 */
+            white-space: -moz-pre-wrap !important;  /* Mozilla, since 1999 */
+            white-space: -pre-wrap;      /* Opera 4-6 */
+            white-space: -o-pre-wrap;    /* Opera 7 */
+            word-wrap: break-word;       /* Internet Explorer 5.5+ */
+            width: 99%;   /* remove horizontal scroll-bar when viewing in IE7 */
+         }
+         .sikuli-code img {
+            vertical-align: middle;
+            margin: 2px;
+            border: 1px solid #ccc;
+            padding: 2px;
+            -moz-border-radius: 5px;
+            -webkit-border-radius: 5px;
+            -moz-box-shadow: 1px 1px 1px gray;
+            -webkit-box-shadow: 1px 1px 2px gray;
+         }
+         .kw {
+            color: blue;
+         }
+         .skw {
+            color: rgb(63, 127, 127);
+         }
+
+         .str {
+            color: rgb(128, 0, 0);
+         }
+
+         .dig {
+            color: rgb(128, 64, 0);
+         }
+
+         .cmt {
+            color: rgb(200, 0, 200);
+         }
+
+         h2 {
+            display: inline;
+            font-weight: normal;
+         }
+
+         .info {
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+            margin-bottom: 20px;
+            display: none;
+         }
+
+         a {
+            color: #9D2900;
+         }
+
+         body {
+            font-family: "Trebuchet MS", Arial, Sans-Serif;
+         }
+
+      </style>
+   </head>
+<body>
+<div class="info">
+<h2>test_case_1795.sikuli</h2> <a href="test_case_1795.zip">(Download this script)</a>
+</div>
+<pre class="sikuli-code">
+<span class="kw">import</span> os
+<span class="kw">import</span> time
+<span class="kw">from</span> nose.plugins.attrib <span class="kw">import</span> attr
+
+<span class="kw">import</span> helper
+<span class="kw">from</span> sikuli <span class="kw">import</span> *
+<span class="kw">from</span> global_config <span class="kw">import</span> *
+
+<span class="kw">from</span> controls.sign_in_control <span class="kw">import</span> *
+<span class="kw">from</span> controls.rt_control <span class="kw">import</span> *
+<span class="kw">from</span> controls.system_tray_control <span class="kw">import</span> *
+
+<span class="kw">import</span> ops.operations <span class="kw">as</span> op
+
+<span class="kw">from</span> base <span class="kw">import</span> *
+
+
+<span class="kw">class</span> TestCase_1795(TestCase_Base):
+
+    <span class="str">""" Media Scan: Add new media files to the watch folder """</span>
+
+    <span class="kw">def</span> setUp(self):
+        <span class="kw">try</span>:
+            TestCase_Base.setUp(self)
+
+            <span class="cmt"># prepare test content</span>
+            self.test_image_name = <span class="str">"MediaScan.JPG"</span>
+            self.test_image_full_path = os.path.join(
+                test_content_path, <span class="str">"original"</span>, self.test_image_name)
+            <span class="kw">if</span> os.path.exists(os.path.join(picture_root_folder, self.test_image_name)):
+                os.remove(
+                    os.path.join(picture_root_folder, self.test_image_name))
+
+            op.launch_RT_before_running_case()
+            assert_step(self.RT.remove_all_from_mymac_view())
+        <span class="kw">except</span>:
+            TestCase_Base.tearDown(self)
+            <span class="kw">raise</span>
+
+    @attr(<span class="str">'BVT'</span>)
+    <span class="kw">def</span> test_add_new_media_files_to_watch_folder(self):
+        <span class="cmt"># enable pictures from media library</span>
+        log(<span class="str">"select checkbox '"</span> + picture_root_folder +
+            <span class="str">"' from media library preferences dialog"</span>)
+        op.check_one_item_in_media_library_preferences(picture_root_folder)
+
+        log(<span class="str">"wait one minute for library loading"</span>)
+        time.<span class="skw">sleep</span>(<span class="dig">60</span>)
+
+        <span class="cmt"># copy file to watch folder</span>
+        log(<span class="str">"Copy file %s to pictures watch folder %s"</span> %
+            (self.test_image_name, picture_root_folder))
+        <span class="kw">assert</span> helper.copy_file(self.test_image_full_path, picture_root_folder), <span class="str">"Fail to copy file from '%s' to pictures watch folder '%s'"</span> % (
+            self.test_image_name, picture_root_folder)
+
+        <span class="cmt"># verify the shared item is in the view</span>
+        <span class="kw">if</span> osx_version == <span class="str">"10.10"</span>:
+            <span class="kw">assert</span> region.exists(new_photo_found_notification_10_10,
+                                 default_wait_long_time), <span class="str">"The 'new photo found' notification doesn't show up."</span>
+            <span class="kw">assert</span> region.waitVanish(
+                new_photo_found_notification_10_10, default_wait_long_time), <span class="str">"The notification doesn't be dismissed after a while"</span>
+        <span class="kw">elif</span> osx_version == <span class="str">"10.9"</span>:
+            <span class="kw">assert</span> region.exists(new_photo_found_notification_10_9,
+                                 default_wait_long_time), <span class="str">"The 'new photo found' notification doesn't show up."</span>
+            <span class="kw">assert</span> region.waitVanish(
+                new_photo_found_notification_10_9, default_wait_long_time), <span class="str">"The notification doesn't be dismissed after a while"</span>
+        time.<span class="skw">sleep</span>(<span class="dig">2</span>)
+        log(<span class="str">"search scanned media in library"</span>)
+        rt = RT(region)
+        rt.search_library(self.test_image_name)
+
+        <span class="cmt"># verify new item is added to library view</span>
+        <span class="kw">assert</span> region.exists(
+            media_scan_item), <span class="str">"Cannot find the thumbnail of scanned media in library view"</span>
+
+    <span class="kw">def</span> tearDown(self):
+        TestCase_Base.tearDown(self)
+</pre>
+</body>
+</html>

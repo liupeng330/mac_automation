@@ -1,0 +1,112 @@
+
+<html>
+   <head>
+      <style type="text/css">
+         .sikuli-code {
+            font-size: 20px;
+            font-family: "Osaka-mono", Monospace;
+            line-height: 1.5em;
+            display:table-cell;
+            white-space: pre-wrap;       /* css-3 */
+            white-space: -moz-pre-wrap !important;  /* Mozilla, since 1999 */
+            white-space: -pre-wrap;      /* Opera 4-6 */
+            white-space: -o-pre-wrap;    /* Opera 7 */
+            word-wrap: break-word;       /* Internet Explorer 5.5+ */
+            width: 99%;   /* remove horizontal scroll-bar when viewing in IE7 */
+         }
+         .sikuli-code img {
+            vertical-align: middle;
+            margin: 2px;
+            border: 1px solid #ccc;
+            padding: 2px;
+            -moz-border-radius: 5px;
+            -webkit-border-radius: 5px;
+            -moz-box-shadow: 1px 1px 1px gray;
+            -webkit-box-shadow: 1px 1px 2px gray;
+         }
+         .kw {
+            color: blue;
+         }
+         .skw {
+            color: rgb(63, 127, 127);
+         }
+
+         .str {
+            color: rgb(128, 0, 0);
+         }
+
+         .dig {
+            color: rgb(128, 64, 0);
+         }
+
+         .cmt {
+            color: rgb(200, 0, 200);
+         }
+
+         h2 {
+            display: inline;
+            font-weight: normal;
+         }
+
+         .info {
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+            margin-bottom: 20px;
+            display: none;
+         }
+
+         a {
+            color: #9D2900;
+         }
+
+         body {
+            font-family: "Trebuchet MS", Arial, Sans-Serif;
+         }
+
+      </style>
+   </head>
+<body>
+<div class="info">
+<h2>test_case_1790.sikuli</h2> <a href="test_case_1790.zip">(Download this script)</a>
+</div>
+<pre class="sikuli-code">
+<span class="kw">from</span> nose.plugins.attrib <span class="kw">import</span> attr
+<span class="kw">from</span> helper <span class="kw">import</span> *
+<span class="kw">from</span> sikuli <span class="kw">import</span> *
+<span class="kw">from</span> global_config <span class="kw">import</span> *
+
+<span class="kw">from</span> controls.sign_in_control <span class="kw">import</span> *
+<span class="kw">from</span> controls.rt_control <span class="kw">import</span> *
+<span class="kw">from</span> controls.system_tray_control <span class="kw">import</span> *
+
+<span class="kw">import</span> ops.operations <span class="kw">as</span> op
+
+<span class="kw">from</span> base <span class="kw">import</span> *
+
+
+<span class="kw">class</span> TestCase_1790(TestCase_Base):
+
+    <span class="str">""" Authentication: Sign out from systray """</span>
+
+    <span class="kw">def</span> setUp(self):
+        <span class="kw">try</span>:
+            TestCase_Base.setUp(self)
+            op.launch_RT_before_running_case()
+        <span class="kw">except</span>:
+            TestCase_Base.tearDown(self)
+            <span class="kw">raise</span>
+
+    @attr(<span class="str">'BVT'</span>)
+    <span class="kw">def</span> test_sign_out_from_systray(self):
+        systray = SystemTray(top_menu_bar_region)
+        systray.sign_out()
+        self.RT.launch()
+
+        <span class="cmt"># verify RT has sign out</span>
+        <span class="kw">assert</span> region.exists(sign_in_button, default_wait_time), <span class="str">"Fail to find 'Sign in' button in sign in panel"</span>
+
+    <span class="kw">def</span> tearDown(self):
+        TestCase_Base.tearDown(self)
+</pre>
+</body>
+</html>

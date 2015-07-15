@@ -1,0 +1,187 @@
+
+<html>
+   <head>
+      <style type="text/css">
+         .sikuli-code {
+            font-size: 20px;
+            font-family: "Osaka-mono", Monospace;
+            line-height: 1.5em;
+            display:table-cell;
+            white-space: pre-wrap;       /* css-3 */
+            white-space: -moz-pre-wrap !important;  /* Mozilla, since 1999 */
+            white-space: -pre-wrap;      /* Opera 4-6 */
+            white-space: -o-pre-wrap;    /* Opera 7 */
+            word-wrap: break-word;       /* Internet Explorer 5.5+ */
+            width: 99%;   /* remove horizontal scroll-bar when viewing in IE7 */
+         }
+         .sikuli-code img {
+            vertical-align: middle;
+            margin: 2px;
+            border: 1px solid #ccc;
+            padding: 2px;
+            -moz-border-radius: 5px;
+            -webkit-border-radius: 5px;
+            -moz-box-shadow: 1px 1px 1px gray;
+            -webkit-box-shadow: 1px 1px 2px gray;
+         }
+         .kw {
+            color: blue;
+         }
+         .skw {
+            color: rgb(63, 127, 127);
+         }
+
+         .str {
+            color: rgb(128, 0, 0);
+         }
+
+         .dig {
+            color: rgb(128, 64, 0);
+         }
+
+         .cmt {
+            color: rgb(200, 0, 200);
+         }
+
+         h2 {
+            display: inline;
+            font-weight: normal;
+         }
+
+         .info {
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+            margin-bottom: 20px;
+            display: none;
+         }
+
+         a {
+            color: #9D2900;
+         }
+
+         body {
+            font-family: "Trebuchet MS", Arial, Sans-Serif;
+         }
+
+      </style>
+   </head>
+<body>
+<div class="info">
+<h2>player_control.sikuli</h2> <a href="player_control.zip">(Download this script)</a>
+</div>
+<pre class="sikuli-code">
+<span class="kw">from</span> sikuli <span class="kw">import</span> *
+<span class="kw">from</span> screenshots <span class="kw">import</span> *
+<span class="kw">from</span> global_config <span class="kw">import</span> *
+<span class="kw">import</span> helper
+<span class="kw">import</span> time
+<span class="kw">from</span> threading <span class="kw">import</span> Thread
+
+<span class="kw">class</span> Player(object):
+
+    <span class="kw">def</span> __init__(self, region):
+        self.region = region
+
+    <span class="kw">def</span> get_value_of_progress_bar(self):
+        ret = <span class="dig">0.0</span>
+        <span class="kw">try</span>:
+            ret = float(
+                helper.run_apple_script(<span class="str">"value_process_bar_player.applescript"</span>).rstrip(<span class="str">"\n"</span>))
+        <span class="kw">except</span>:
+            <span class="kw">pass</span>
+        <span class="kw">return</span> ret
+
+    <span class="kw">def</span> maximize(self):
+        helper.run_apple_script(<span class="str">"maximize_player.applescript"</span>)
+
+    <span class="kw">def</span> close(self):
+        helper.run_apple_script(<span class="str">"close_player.applescript"</span>)
+
+    <span class="kw">def</span> download(self):
+        <span class="kw">if</span> self.region.exists(download_button_in_player_window):
+            self.region.<span class="skw">click</span>(download_button_in_player_window)
+            <span class="kw">return</span> True
+        <span class="kw">return</span> False, <span class="str">"Fail to find 'Download' button from 'Player window'"</span>
+
+    <span class="kw">def</span> upload(self):
+        <span class="kw">if</span> self.region.exists(upload_button_in_player_window):
+            self.region.<span class="skw">click</span>(upload_button_in_player_window)
+            <span class="kw">return</span> True
+        <span class="kw">return</span> False, <span class="str">"Fail to find 'Upload' button from 'Player window'"</span>
+
+    <span class="kw">def</span> is_playing(self):
+        <span class="kw">return</span> self.get_value_of_progress_bar() &gt; <span class="dig">0</span>
+
+    <span class="kw">def</span> play(self):
+        helper.run_apple_script(<span class="str">"play_player.applescript"</span>)
+
+    <span class="kw">def</span> stop(self):
+        helper.run_apple_script(<span class="str">"stop_player.applescript"</span>)
+
+    <span class="kw">def</span> restart(self):
+        self.stop()
+        self.play()
+
+    <span class="kw">def</span> wait_till_start_playing(self, timeout=<span class="dig">30</span>):
+        start = time.time()
+        <span class="kw">while</span> <span class="kw">not</span> self.is_playing():
+            <span class="kw">if</span> (time.time() - start) &gt; timeout:
+                <span class="kw">return</span> False, <span class="str">"Timeout for waiting to start playing in Player window"</span>
+            time.<span class="skw">sleep</span>(<span class="dig">2</span>)
+        <span class="kw">return</span> True
+
+    <span class="kw">def</span> get_title(self):
+        <span class="kw">return</span> helper.run_apple_script(<span class="str">"get_title_of_player.applescript"</span>).rstrip(<span class="str">'\n'</span>)
+
+    <span class="kw">def</span> set_to_original_size(self):
+        helper.run_apple_script(<span class="str">"set_original_size_of_player.applescript"</span>)
+
+    <span class="kw">def</span> make_overlay_display(self):
+        size = self._get_size_of_window()
+        position = self._get_position_of_window()
+        <span class="kw">if</span> len(size) != <span class="dig">2</span> <span class="kw">or</span> len(position) != <span class="dig">2</span>:
+            <span class="kw">return</span> False, <span class="str">"Fail to get size and position of player window"</span>
+        <span class="kw">for</span> i <span class="kw">in</span> range(<span class="dig">2</span>):
+            self.region.hover(Location(position[<span class="dig">0</span>], position[<span class="dig">1</span>]))
+            self.region.hover(Location(position[<span class="dig">0</span>] + size[<span class="dig">0</span>], position[<span class="dig">1</span>] + size[<span class="dig">1</span>]))
+
+    <span class="kw">def</span> _get_size_of_window(self):
+        <span class="kw">return</span> self._parse_ret(helper.run_apple_script(<span class="str">"get_size_of_player.applescript"</span>))
+
+    <span class="kw">def</span> _get_position_of_window(self):
+        <span class="kw">return</span> self._parse_ret(helper.run_apple_script(<span class="str">"get_position_of_player.applescript"</span>))
+
+    <span class="kw">def</span> _parse_ret(self, ret):
+        ret = ret.replace(<span class="str">'{'</span>, <span class="str">''</span>).replace(<span class="str">'}'</span>, <span class="str">''</span>)
+        <span class="kw">return</span> [int(i) <span class="kw">for</span> i <span class="kw">in</span> ret.split(<span class="str">','</span>)]
+
+
+<span class="kw">class</span> VerifyPlay(object):
+
+    <span class="kw">def</span> __init__(self, timeout, *screenshots):
+        self.num_of_screenshots = len(screenshots)
+        self.threads = [None] * self.num_of_screenshots
+        self.results = [None] * self.num_of_screenshots
+
+        <span class="kw">for</span> i <span class="kw">in</span> range(self.num_of_screenshots):
+            self.threads[i] = Thread(target=self._exist, args=(screenshots[i], timeout, i))
+
+    <span class="kw">def</span> _exist(self, image, timeout, index):
+        self.results[index] = region.exists(image, timeout)
+
+    <span class="kw">def</span> start(self):
+        <span class="kw">for</span> t <span class="kw">in</span> self.threads:
+            t.start()
+
+    <span class="kw">def</span> <span class="skw">wait</span>(self):
+        <span class="kw">for</span> t <span class="kw">in</span> self.threads:
+            t.join()
+
+    <span class="kw">def</span> verify_result(self):
+        failed_index = [str(i+<span class="dig">1</span>) <span class="kw">for</span> i <span class="kw">in</span> range(self.num_of_screenshots) <span class="kw">if</span> self.results[i] <span class="kw">is</span> None]
+        <span class="kw">if</span> len(failed_index) != <span class="dig">0</span>:
+            <span class="kw">return</span> False, <span class="str">"Playback verification got failed, cannot find screenshots for numbers \""</span> + <span class="str">","</span>.join(failed_index) + <span class="str">"\""</span>
+        <span class="kw">return</span> True
+</pre>
+</body>
+</html>

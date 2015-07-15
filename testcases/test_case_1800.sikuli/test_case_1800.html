@@ -1,0 +1,153 @@
+
+<html>
+   <head>
+      <style type="text/css">
+         .sikuli-code {
+            font-size: 20px;
+            font-family: "Osaka-mono", Monospace;
+            line-height: 1.5em;
+            display:table-cell;
+            white-space: pre-wrap;       /* css-3 */
+            white-space: -moz-pre-wrap !important;  /* Mozilla, since 1999 */
+            white-space: -pre-wrap;      /* Opera 4-6 */
+            white-space: -o-pre-wrap;    /* Opera 7 */
+            word-wrap: break-word;       /* Internet Explorer 5.5+ */
+            width: 99%;   /* remove horizontal scroll-bar when viewing in IE7 */
+         }
+         .sikuli-code img {
+            vertical-align: middle;
+            margin: 2px;
+            border: 1px solid #ccc;
+            padding: 2px;
+            -moz-border-radius: 5px;
+            -webkit-border-radius: 5px;
+            -moz-box-shadow: 1px 1px 1px gray;
+            -webkit-box-shadow: 1px 1px 2px gray;
+         }
+         .kw {
+            color: blue;
+         }
+         .skw {
+            color: rgb(63, 127, 127);
+         }
+
+         .str {
+            color: rgb(128, 0, 0);
+         }
+
+         .dig {
+            color: rgb(128, 64, 0);
+         }
+
+         .cmt {
+            color: rgb(200, 0, 200);
+         }
+
+         h2 {
+            display: inline;
+            font-weight: normal;
+         }
+
+         .info {
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+            margin-bottom: 20px;
+            display: none;
+         }
+
+         a {
+            color: #9D2900;
+         }
+
+         body {
+            font-family: "Trebuchet MS", Arial, Sans-Serif;
+         }
+
+      </style>
+   </head>
+<body>
+<div class="info">
+<h2>test_case_1800.sikuli</h2> <a href="test_case_1800.zip">(Download this script)</a>
+</div>
+<pre class="sikuli-code">
+<span class="kw">from</span> nose.plugins.attrib <span class="kw">import</span> attr
+<span class="kw">from</span> helper <span class="kw">import</span> *
+<span class="kw">from</span> sikuli <span class="kw">import</span> *
+<span class="kw">from</span> global_config <span class="kw">import</span> *
+
+<span class="kw">from</span> controls.sign_in_control <span class="kw">import</span> *
+<span class="kw">from</span> controls.rt_control <span class="kw">import</span> *
+<span class="kw">from</span> controls.system_tray_control <span class="kw">import</span> *
+
+<span class="kw">import</span> ops.operations <span class="kw">as</span> op
+
+<span class="kw">from</span> base <span class="kw">import</span> *
+
+
+<span class="kw">class</span> TestCase_1800(TestCase_Base):
+
+    <span class="str">""" Upload/Download: Drag and Drop a video or photo onto the Library window/TQ/Systray """</span>
+
+    <span class="kw">def</span> setUp(self):
+        <span class="kw">try</span>:
+            TestCase_Base.setUp(self)
+
+            <span class="cmt"># test clip</span>
+            self.test_name_video = <span class="str">"Upload.AVI"</span>
+            self.test_name_photo = <span class="str">"upload_photo.jpg"</span>
+            self.test_case_path = prepare_content(
+                <span class="str">"1800"</span>, False, self.test_name_video, self.test_name_photo)
+
+            op.launch_RT_before_running_case()
+            assert_step(self.RT.remove_all_from_mymac_view())
+        <span class="kw">except</span>:
+            TestCase_Base.tearDown(self)
+            <span class="kw">raise</span>
+
+    @attr(<span class="str">'BVT'</span>)
+    <span class="kw">def</span> test_upload_drag_to_library(self):
+        log(<span class="str">"Navigate to test content path"</span>)
+        put_finder_to_right_side_of_screen(self.test_case_path)
+
+        log(<span class="str">"Drag drop clips to library view"</span>)
+        op.drag_drop_clips_to_library(
+            self.test_case_path, upload_photo_item_in_finder_icon_view, upload_video_item_in_finder_icon_view)
+
+        self._verify_upload()
+
+    @attr(<span class="str">'BVT'</span>)
+    <span class="kw">def</span> test_upload_drag_to_TQ(self):
+        log(<span class="str">"Put transfer dialog to left side of screen"</span>)
+        op.put_transfers_dialog_to_left_side_of_screen()
+
+        log(<span class="str">"Drag drop clips to transfers dialog"</span>)
+        op.drag_drop_clips_to_transfers_dialog(
+            self.test_case_path, upload_photo_item_in_finder_icon_view, upload_video_item_in_finder_icon_view)
+
+        self._verify_upload()
+
+    @attr(<span class="str">'BVT'</span>)
+    <span class="kw">def</span> test_upload_drag_to_systemTray(self):
+        log(<span class="str">"Put transfer dialog to left side of screen"</span>)
+        op.put_transfers_dialog_to_left_side_of_screen()
+
+        log(<span class="str">"Drag drop clips to system tray"</span>)
+        op.drag_drop_clips_to_system_tray(
+            self.test_case_path, upload_photo_item_in_finder_icon_view, upload_video_item_in_finder_icon_view)
+
+        self._verify_upload()
+
+    <span class="kw">def</span> _verify_upload(self):
+        log(<span class="str">"Wait it upload complete"</span>)
+        <span class="kw">assert</span> wait_for_upload_complete(
+            get_title_of_file(self.test_name_photo)), <span class="str">"Fail to find uploaded test clip '"</span> + self.test_name_photo + <span class="str">"' from cloud side via API"</span>
+
+        log(<span class="str">"Wait it upload compelte"</span>)
+        <span class="kw">assert</span> wait_for_upload_complete(
+            get_title_of_file(self.test_name_video)), <span class="str">"Fail to find uploaded test clip '"</span> + self.test_name_video + <span class="str">"' from cloud side via API"</span>
+
+    <span class="kw">def</span> tearDown(self):
+        TestCase_Base.tearDown(self)
+</pre>
+</body>
+</html>

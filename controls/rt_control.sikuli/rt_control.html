@@ -1,0 +1,678 @@
+
+<html>
+   <head>
+      <style type="text/css">
+         .sikuli-code {
+            font-size: 20px;
+            font-family: "Osaka-mono", Monospace;
+            line-height: 1.5em;
+            display:table-cell;
+            white-space: pre-wrap;       /* css-3 */
+            white-space: -moz-pre-wrap !important;  /* Mozilla, since 1999 */
+            white-space: -pre-wrap;      /* Opera 4-6 */
+            white-space: -o-pre-wrap;    /* Opera 7 */
+            word-wrap: break-word;       /* Internet Explorer 5.5+ */
+            width: 99%;   /* remove horizontal scroll-bar when viewing in IE7 */
+         }
+         .sikuli-code img {
+            vertical-align: middle;
+            margin: 2px;
+            border: 1px solid #ccc;
+            padding: 2px;
+            -moz-border-radius: 5px;
+            -webkit-border-radius: 5px;
+            -moz-box-shadow: 1px 1px 1px gray;
+            -webkit-box-shadow: 1px 1px 2px gray;
+         }
+         .kw {
+            color: blue;
+         }
+         .skw {
+            color: rgb(63, 127, 127);
+         }
+
+         .str {
+            color: rgb(128, 0, 0);
+         }
+
+         .dig {
+            color: rgb(128, 64, 0);
+         }
+
+         .cmt {
+            color: rgb(200, 0, 200);
+         }
+
+         h2 {
+            display: inline;
+            font-weight: normal;
+         }
+
+         .info {
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+            margin-bottom: 20px;
+            display: none;
+         }
+
+         a {
+            color: #9D2900;
+         }
+
+         body {
+            font-family: "Trebuchet MS", Arial, Sans-Serif;
+         }
+
+      </style>
+   </head>
+<body>
+<div class="info">
+<h2>rt_control.sikuli</h2> <a href="rt_control.zip">(Download this script)</a>
+</div>
+<pre class="sikuli-code">
+<span class="kw">from</span> sikuli <span class="kw">import</span> *
+<span class="kw">from</span> screenshots <span class="kw">import</span> *
+<span class="kw">from</span> global_config <span class="kw">import</span> *
+<span class="kw">import</span> helper
+<span class="kw">import</span> os
+<span class="kw">import</span> time
+
+
+<span class="kw">class</span> RT(object):
+
+    <span class="kw">def</span> __init__(self, region):
+        self.region = region
+
+    <span class="kw">def</span> launch(self):
+        <span class="str">""" launch RT """</span>
+
+        self.app = App(app_name)
+        helper.log(<span class="str">"Opening RT"</span>)
+        <span class="kw">while</span> self.app.open() == None:
+            helper.log(<span class="str">"Opening RT is failed, retry!!"</span>)
+            time.<span class="skw">sleep</span>(<span class="dig">5</span>)
+        helper.log(<span class="str">"Focusing RT"</span>)
+        self.app.focus()
+
+    <span class="kw">def</span> maximize(self):
+        os.system(
+            <span class="str">"osascript "</span> + os.path.join(applescript_path, <span class="str">"maximize_rt.applescript"</span>))
+
+    <span class="kw">def</span> maximize_separate_playback_window(self):
+        os.system(
+            <span class="str">"osascript "</span> + os.path.join(applescript_path, <span class="str">"maximize_playback_separate_window.applescript"</span>))
+
+    <span class="kw">def</span> restore_windows_size(self):
+        helper.run_apple_script(<span class="str">"restore_rt.applescript"</span>)
+
+    <span class="kw">def</span> reset_play_process_bar(self):
+        helper.run_apple_script(<span class="str">"reset_value_process_bar_play_gallery_view.applescript"</span>)
+
+    <span class="kw">def</span> sign_out(self):
+        <span class="str">""" sign out from RT account setting menu """</span>
+
+        helper.log(<span class="str">"Click account setting button on top bar"</span>)
+        <span class="kw">if</span> self.region.exists(account_setting_button_top_bar, default_wait_time):
+            self.region.<span class="skw">click</span>(account_setting_button_top_bar)
+            helper.log(<span class="str">"Click sign out button"</span>)
+            self.region.<span class="skw">click</span>(sign_out_button_in_account_setting_button_top_bar)
+            <span class="kw">return</span> True
+        <span class="kw">return</span> False, <span class="str">"Fail to find 'Account setting button on top bar of RealTimes"</span>
+
+    @property
+    <span class="kw">def</span> is_sign_in(self):
+        <span class="kw">return</span> self.region.exists(has_signed_in_rt_top_bar, default_wait_time)
+
+    <span class="kw">def</span> set_to_init_env(self):
+        <span class="cmt"># need to sign in first</span>
+        <span class="kw">if</span> <span class="kw">not</span> self.is_sign_in:
+            <span class="kw">return</span> False, <span class="str">"RealTimes is not in signed in status!!"</span>
+
+        <span class="cmt"># maximize RT</span>
+        self.maximize()
+
+        <span class="cmt"># check if current is in gallery view</span>
+        self.make_overlay_display()
+        <span class="kw">if</span> self.is_in_gallery_view():
+            self.exit_gallery_view()
+
+        <span class="cmt"># check if 'Photos&amp;Videos' is selected</span>
+        <span class="kw">if</span> self.region.exists(photos_and_videos_button_selected, default_wait_time):
+            self.region.<span class="skw">click</span>(photos_and_videos_button_selected)
+        <span class="kw">else</span>:
+            <span class="kw">return</span> False, <span class="str">"Fail to find 'Photos &amp; Videos' button"</span>
+        helper.assert_step(self.switch_to_all_view())
+        <span class="kw">return</span> True
+
+    <span class="kw">def</span> quit(self):
+        self.app.close()
+
+    <span class="kw">def</span> play_video(self, item):
+        <span class="kw">if</span> self.region.exists(item, default_wait_time):
+            self.region.<span class="skw">doubleClick</span>(item)
+            <span class="kw">return</span> True
+        <span class="kw">else</span>:
+            <span class="kw">return</span> False, <span class="str">"Fail to find item in library view before playing it"</span>
+
+    <span class="kw">def</span> play_in_seperate_window(self):
+        self.region.<span class="skw">click</span>(play_in_separate_window_button)
+
+    <span class="kw">def</span> play_with_slideshow(self):
+        self.region.<span class="skw">click</span>(play_as_slideshow_button)
+
+    <span class="kw">def</span> play_with_slideshow_for_album(self, item):
+        self.region.<span class="skw">rightClick</span>(item)
+        time.<span class="skw">sleep</span>(<span class="dig">2</span>)
+        <span class="skw">type</span>(<span class="str">'sl'</span>)
+        time.<span class="skw">sleep</span>(<span class="dig">2</span>)
+        <span class="skw">type</span>(Key.ENTER)
+
+    <span class="kw">def</span> click_left_arrows_button_in_gallery_view(self):
+        <span class="kw">if</span> self.region.exists(slideshow_left_arrows_button, default_wait_time):
+            self.region.<span class="skw">click</span>(slideshow_left_arrows_button)
+            <span class="kw">return</span> True
+        <span class="kw">return</span> False, <span class="str">"Fail to find button '&lt;--' in gallery view"</span>
+
+    <span class="kw">def</span> upload_video(self, item):
+        <span class="kw">if</span> self.region.exists(item, default_wait_time):
+            self.region.<span class="skw">click</span>(item)
+            <span class="kw">return</span> self.upload_via_bottom_bar()
+        <span class="kw">return</span> False, <span class="str">"Fail to select item before uploading it"</span>
+
+    <span class="kw">def</span> upload_via_bottom_bar(self):
+        <span class="kw">if</span> self.region.exists(plus_button, default_wait_time):
+            self.region.<span class="skw">click</span>(plus_button)
+            <span class="kw">if</span> self.region.exists(upload_button, default_wait_time):
+                self.region.<span class="skw">click</span>(upload_button)
+                <span class="kw">return</span> True
+        <span class="kw">return</span> False, <span class="str">"Fail to find 'Upload' menu item"</span>
+
+    <span class="kw">def</span> download_video(self, item):
+        <span class="kw">if</span> self.region.exists(item, default_wait_time):
+            self.region.<span class="skw">click</span>(item)
+            <span class="kw">return</span> self.download_via_bottom_bar()
+        <span class="kw">return</span> False, <span class="str">"Fail to select item before downloading it"</span>
+
+    <span class="kw">def</span> download_via_bottom_bar(self):
+        <span class="kw">if</span> self.region.exists(plus_button, default_wait_time):
+            self.region.<span class="skw">click</span>(plus_button)
+            <span class="kw">if</span> self.region.exists(download_button, default_wait_time):
+                self.region.<span class="skw">click</span>(download_button)
+                <span class="kw">return</span> True
+        <span class="kw">return</span> False, <span class="str">"Fail to find 'Download' menu item"</span>
+
+    <span class="kw">def</span> view_photo(self, item):
+        self.region.<span class="skw">doubleClick</span>(item)
+
+    <span class="kw">def</span> edit_caption(self, item, old_caption_screenshot, new_caption):
+        self.region.<span class="skw">click</span>(item)
+        time.<span class="skw">sleep</span>(<span class="dig">1</span>)
+        self.region.<span class="skw">click</span>(old_caption_screenshot)
+        time.<span class="skw">sleep</span>(<span class="dig">2</span>)
+        <span class="skw">type</span>(new_caption)
+        <span class="skw">type</span>(Key.ENTER)
+
+    <span class="kw">def</span> make_overlay_display(self):
+        <span class="cmt"># the following movement is to make overlay button show up</span>
+        size = self._get_size_of_window()
+        position = self._get_position_of_window()
+        <span class="kw">if</span> len(size) != <span class="dig">2</span> <span class="kw">or</span> len(position) != <span class="dig">2</span>:
+            <span class="kw">return</span> False, <span class="str">"Fail to get size and position of player window"</span>
+        <span class="kw">for</span> i <span class="kw">in</span> range(<span class="dig">2</span>):
+            self.region.hover(Location(position[<span class="dig">0</span>], position[<span class="dig">1</span>]))
+            self.region.hover(Location(position[<span class="dig">0</span>], position[<span class="dig">1</span>] + size[<span class="dig">1</span>]))
+
+    <span class="kw">def</span> _get_size_of_window(self):
+        <span class="kw">return</span> self._parse_ret(helper.run_apple_script(<span class="str">"get_size_of_player.applescript"</span>))
+
+    <span class="kw">def</span> _get_position_of_window(self):
+        <span class="kw">return</span> self._parse_ret(helper.run_apple_script(<span class="str">"get_position_of_player.applescript"</span>))
+
+    <span class="kw">def</span> _parse_ret(self, ret):
+        ret = ret.replace(<span class="str">'{'</span>, <span class="str">''</span>).replace(<span class="str">'}'</span>, <span class="str">''</span>)
+        <span class="kw">return</span> [int(i) <span class="kw">for</span> i <span class="kw">in</span> ret.split(<span class="str">','</span>)]
+
+    <span class="kw">def</span> get_value_of_progress_bar(self):
+        ret = <span class="dig">0.0</span>
+        <span class="kw">try</span>:
+            ret = float(
+                helper.run_apple_script(<span class="str">"get_value_process_bar_play_gallery_view.applescript"</span>).rstrip(<span class="str">"\n"</span>))
+        <span class="kw">except</span>:
+            <span class="kw">pass</span>
+        <span class="kw">return</span> ret
+
+    <span class="kw">def</span> is_playing(self):
+        <span class="kw">return</span> self.get_value_of_progress_bar() &gt; <span class="dig">0</span>
+
+    <span class="kw">def</span> wait_till_start_playing(self, timeout=<span class="dig">30</span>):
+        start = time.time()
+        <span class="kw">while</span> <span class="kw">not</span> self.is_playing():
+            <span class="kw">if</span> (time.time() - start) &gt; timeout:
+                <span class="kw">return</span> False, <span class="str">"Timeout for waiting to start playing in gallery view"</span>
+            time.<span class="skw">sleep</span>(<span class="dig">2</span>)
+        <span class="kw">return</span> True
+
+    <span class="kw">def</span> verify_rt_is_playing_video(self):
+        self.make_overlay_display()
+
+        <span class="kw">if</span> <span class="kw">not</span> self.region.exists(pause_button, default_wait_long_time):
+            <span class="kw">return</span> False, <span class="str">"'Pause' button should be shown"</span>
+        <span class="kw">if</span> <span class="kw">not</span> self.region.exists(play_in_separate_window_button, default_wait_time):
+            <span class="kw">return</span> False, <span class="str">"'Play in separate window' button should be shown"</span>
+        <span class="kw">if</span> <span class="kw">not</span> self.region.exists(play_as_slideshow_button, default_wait_time):
+            <span class="kw">return</span> False, <span class="str">"'Play as slideshow' button should be shown"</span>
+        <span class="kw">return</span> True
+
+    <span class="kw">def</span> is_in_gallery_view(self):
+        self.make_overlay_display()
+        <span class="kw">return</span> self.region.exists(play_as_slideshow_button, default_wait_time)
+
+    <span class="kw">def</span> exit_gallery_view(self):
+        self.make_overlay_display()
+        self.region.<span class="skw">click</span>(exit_gallery_button)
+
+    <span class="kw">def</span> verify_in_gallery_view(self, item):
+        self.make_overlay_display()
+        <span class="kw">if</span> <span class="kw">not</span> self.region.exists(item, default_wait_time):
+            <span class="kw">return</span> False, <span class="str">"Item wasn't shown in gallery view"</span>
+        <span class="kw">return</span> True
+
+    <span class="kw">def</span> rename_in_gallery_view(self, item, new_name):
+        self.make_overlay_display()
+        self.region.<span class="skw">doubleClick</span>(item)
+        time.<span class="skw">sleep</span>(<span class="dig">1</span>)
+        <span class="skw">type</span>(new_name)
+        <span class="skw">type</span>(Key.ENTER)
+
+
+    <span class="kw">def</span> switch_to_all_view(self):
+        <span class="kw">if</span> self.region.exists(content_location_switcher_all_selected, default_wait_time):
+            self.region.<span class="skw">click</span>(content_location_switcher_all_selected)
+            <span class="kw">return</span> True
+        <span class="kw">return</span> False, <span class="str">"Fail to switch to 'All' view"</span>
+
+    <span class="kw">def</span> switch_to_mymac_view(self):
+        <span class="kw">if</span> self.region.exists(content_location_switcher_mymac_selected, default_wait_time):
+            self.region.<span class="skw">click</span>(content_location_switcher_mymac_selected)
+            <span class="kw">return</span> True
+        <span class="kw">return</span> False, <span class="str">"Fail to switch to 'MyMac' view"</span>
+
+    <span class="kw">def</span> switch_to_cloud_view(self):
+        <span class="kw">if</span> self.region.exists(content_location_switcher_cloud_selected, default_wait_time):
+            self.region.<span class="skw">click</span>(content_location_switcher_cloud_selected)
+            <span class="kw">return</span> True
+        <span class="kw">return</span> False, <span class="str">"Fail to switch to 'RealCloud' view"</span>
+
+    <span class="kw">def</span> switch_to_albums_view(self):
+        <span class="kw">if</span> self.region.exists(my_albums_button_selected, default_wait_time):
+            self.region.<span class="skw">click</span>(my_albums_button_selected)
+            <span class="kw">return</span> True
+        <span class="kw">return</span> False, <span class="str">"Fail to switch to 'Albums' view"</span>
+
+    <span class="kw">def</span> switch_to_share_view(self):
+        <span class="kw">if</span> self.region.exists(sharing_button_selected, default_wait_time):
+            self.region.<span class="skw">click</span>(sharing_button_selected)
+            <span class="kw">return</span> True
+        <span class="kw">return</span> False, <span class="str">"Fail to switch to 'Sharing' view"</span>
+
+    <span class="kw">def</span> switch_to_shared_by_me_view(self):
+        self.switch_to_share_view()
+        <span class="kw">if</span> self.region.exists(items_i_ve_shared_button_selected):
+            self.region.<span class="skw">click</span>(items_i_ve_shared_button_selected)
+            <span class="kw">return</span> True
+        <span class="kw">return</span> False, <span class="str">"The 'items I've shared' button is not clicked"</span>
+
+    <span class="kw">def</span> switch_to_shared_with_me_view(self):
+        self.switch_to_share_view()
+        <span class="kw">if</span> self.region.exists(share_with_me_button_selected):
+            self.region.<span class="skw">click</span>(share_with_me_button_selected)
+            <span class="kw">return</span> True
+        <span class="kw">return</span> False, <span class="str">"The share with me button is not clicked"</span>
+
+    <span class="kw">def</span> switch_to_recent_activity_view(self):
+        <span class="kw">if</span> self.region.exists(recent_activity_selected, default_wait_time):
+            self.region.<span class="skw">click</span>(recent_activity_selected)
+            <span class="kw">return</span> True
+        <span class="kw">return</span> False, <span class="str">"Fail to find 'Recent' button"</span>
+
+    <span class="kw">def</span> switch_to_recent_activity_all_view(self):
+        self.switch_to_recent_activity_view()
+        <span class="kw">return</span> self.switch_to_all_view()
+
+    <span class="kw">def</span> switch_to_recent_activity_watched_view(self):
+        self.switch_to_recent_activity_view()
+        <span class="kw">if</span> self.region.exists(content_location_switcher_watched_selected, default_wait_time):
+            self.region.<span class="skw">click</span>(content_location_switcher_watched_selected)
+            <span class="kw">return</span> True
+        <span class="kw">return</span> False, <span class="str">"Fail to switch to 'Recent Activity -&gt; Watched' view"</span>
+
+    <span class="kw">def</span> switch_to_recent_activity_uploaded_view(self):
+        self.switch_to_recent_activity_view()
+        <span class="kw">if</span> self.region.exists(content_location_switcher_uploaded_selected, default_wait_time):
+            self.region.<span class="skw">click</span>(content_location_switcher_uploaded_selected)
+            <span class="kw">return</span> True
+        <span class="kw">return</span> False, <span class="str">"Fail to switch to 'Recent Activity -&gt; Uploaded' view"</span>
+
+    <span class="kw">def</span> switch_to_stories_view(self):
+        <span class="kw">if</span> self.region.exists(stories_button_selected, default_wait_time):
+            self.region.<span class="skw">click</span>(stories_button_selected)
+            <span class="kw">return</span> True
+        <span class="kw">return</span> False, <span class="str">"Fail to switch to 'Stories' view"</span>
+
+    <span class="kw">def</span> switch_to_stories_suggested_view(self):
+        self.switch_to_stories_view()
+        <span class="kw">if</span> self.region.exists(content_location_switcher_stories_suggested_selected, default_wait_time):
+            self.region.<span class="skw">click</span>(content_location_switcher_stories_suggested_selected)
+            <span class="kw">return</span> True
+        <span class="kw">return</span> False, <span class="str">"Fail to switch to 'Stories -&gt; Suggested' view"</span>
+
+    <span class="kw">def</span> switch_to_stories_saved_view(self):
+        self.switch_to_stories_view()
+        <span class="kw">if</span> self.region.exists(content_location_switcher_stories_saved_selected, default_wait_time):
+            self.region.<span class="skw">click</span>(content_location_switcher_stories_saved_selected)
+            <span class="kw">return</span> True
+        <span class="kw">return</span> False, <span class="str">"Fail to switch to 'Stories -&gt; Saved' view"</span>
+
+    <span class="kw">def</span> switch_to_stories_cloud_view(self):
+        self.switch_to_stories_view()
+        <span class="kw">if</span> self.region.exists(content_location_switcher_stories_cloud_selected, default_wait_time):
+            self.region.<span class="skw">click</span>(content_location_switcher_stories_cloud_selected)
+            <span class="kw">return</span> True
+        <span class="kw">return</span> False, <span class="str">"Fail to switch to 'Stories -&gt; Cloud' view"</span>
+
+    <span class="kw">def</span> add_to_my_library(self, content_folder_path):
+        <span class="str">""" add contents in 'content_folder_path' to 'My Mac' """</span>
+
+        <span class="cmt"># switch to 'My Mac'</span>
+        helper.retry(self.switch_to_mymac_view)
+        <span class="cmt"># use shortcut "CMD + L" to open file dialog</span>
+        <span class="skw">type</span>(<span class="str">"l"</span>, Key.CMD)
+        <span class="cmt"># verify open file dialog is shown</span>
+        <span class="kw">if</span> <span class="kw">not</span> self.region.exists(open_file_dialog_title_bar, default_wait_time):
+            <span class="kw">return</span> False, <span class="str">"'open file dialog' should exists"</span>
+        <span class="cmt"># change view to 'as icon'</span>
+        <span class="skw">type</span>(<span class="str">"1"</span>, Key.CMD)
+        time.<span class="skw">sleep</span>(<span class="dig">2</span>)
+        <span class="cmt"># go to content_folder_path</span>
+        <span class="skw">type</span>(<span class="str">"g"</span>, Key.CMD + Key.SHIFT)
+        <span class="kw">if</span> <span class="kw">not</span> self.region.exists(go_to_folder_dialog_title, default_wait_time):
+            <span class="kw">return</span> False, <span class="str">"'go to folder dialog' shloud exist"</span>
+        <span class="skw">type</span>(content_folder_path)
+        <span class="kw">if</span> self.region.exists(go_to_folder_dialog_go_button_10_9):
+            self.region.<span class="skw">click</span>(go_to_folder_dialog_go_button_10_9)
+        <span class="kw">if</span> self.region.exists(go_to_folder_dialog_go_button_10_10):
+            self.region.<span class="skw">click</span>(go_to_folder_dialog_go_button_10_10)
+
+        <span class="cmt"># click open button</span>
+        time.<span class="skw">sleep</span>(<span class="dig">2</span>)
+        <span class="skw">type</span>(Key.ENTER)
+
+        <span class="cmt"># Wait 'open file dialog' dismissed</span>
+        <span class="kw">if</span> <span class="kw">not</span> self.region.waitVanish(open_file_dialog_title_bar, default_wait_time):
+            <span class="kw">return</span> False, <span class="str">"Fail to wait 'open file dialog' dismissed"</span>
+
+    <span class="kw">def</span> remove_all_from_mymac_view(self):
+        <span class="str">""" remove all items from ''My Mac' view """</span>
+
+        <span class="cmt"># switch to 'My Mac'</span>
+        helper.log(<span class="str">"switch to 'My Mac'"</span>)
+        helper.retry(self.switch_to_mymac_view)
+        time.<span class="skw">sleep</span>(<span class="dig">2</span>)
+        <span class="cmt"># remove all from current view</span>
+        <span class="kw">return</span> self.remove_all()
+
+    <span class="kw">def</span> remove_all_from_cloud_view(self):
+        <span class="str">""" remove all items from 'Cloud' view """</span>
+
+        <span class="cmt"># switch to 'Cloud'</span>
+        helper.log(<span class="str">"switch to 'Cloud'"</span>)
+        helper.retry(self.switch_to_cloud_view)
+        time.<span class="skw">sleep</span>(<span class="dig">2</span>)
+        <span class="cmt"># remove all from current view</span>
+        <span class="kw">return</span> self.remove_all()
+
+    <span class="kw">def</span> remove_all(self):
+        <span class="kw">while</span> <span class="kw">not</span> self.region.exists(no_photos_or_videos, default_wait_time):
+            <span class="cmt"># select all</span>
+            self.region.<span class="skw">click</span>(select_current_view)
+            <span class="skw">type</span>(<span class="str">"a"</span>, Key.CMD)
+            <span class="cmt"># click delete button</span>
+            <span class="skw">type</span>(Key.DELETE)
+            <span class="cmt"># if current view contains cloud&amp;local content, will select 'delete</span>
+            <span class="cmt"># from this mac' radio button</span>
+            <span class="kw">if</span> self.region.exists(delete_from_this_mac_radio_button, default_wait_time):
+                self.region.<span class="skw">click</span>(delete_from_this_mac_radio_button)
+            <span class="kw">if</span> self.region.exists(delete_button_10_9):
+                self.region.<span class="skw">click</span>(delete_button_10_9)
+            <span class="kw">if</span> self.region.exists(delete_button_10_10):
+                self.region.<span class="skw">click</span>(delete_button_10_10)
+            <span class="kw">if</span> self.region.waitVanish(delete_button_10_9) <span class="kw">or</span> self.region.waitVanish(delete_button_10_10):
+                <span class="kw">return</span> True
+            <span class="kw">else</span>:
+                <span class="kw">return</span> False, <span class="str">"Fail to wait 'delete button' dismissed"</span>
+        <span class="kw">else</span>:
+            helper.log(<span class="str">"No photos or videos, return"</span>)
+            <span class="kw">return</span> True
+
+    <span class="kw">def</span> open_transfers_dialog(self):
+        self.region.<span class="skw">click</span>(transfers_button)
+
+    <span class="kw">def</span> add_item_to_album(self, item_list, item_in_album_view=test_album_item, album_name=<span class="str">"new"</span>):
+        self._multiple_select(item_list)
+        helper.assert_step(self.add_to_album_via_bottom_bar())
+        <span class="kw">if</span> album_name == <span class="str">'new'</span>:
+            self.region.<span class="skw">wait</span>(new_album_dialog_button)
+            self.region.<span class="skw">click</span>(new_album_dialog_button)
+            time.<span class="skw">sleep</span>(<span class="dig">1</span>)
+            <span class="skw">type</span>(<span class="str">"test"</span>)
+            <span class="kw">if</span> self.region.exists(create_album_dialog_button_10_9):
+                self.region.<span class="skw">click</span>(create_album_dialog_button_10_9)
+            <span class="kw">if</span> self.region.exists(create_album_dialog_button_10_10):
+                self.region.<span class="skw">click</span>(create_album_dialog_button_10_10)
+            <span class="kw">if</span> <span class="kw">not</span> region.exists(album_item_dialog_icon, default_wait_time):
+                <span class="skw">type</span>(Key.ESC)
+                <span class="kw">return</span> False, <span class="str">"Failed to create new album"</span>
+            self.region.<span class="skw">click</span>(album_item_dialog_icon)
+            <span class="kw">if</span> self.region.exists(add_to_album_dialog_button_10_10):
+                self.region.<span class="skw">click</span>(add_to_album_dialog_button_10_10)
+            <span class="kw">if</span> self.region.exists(add_to_album_dialog_button_10_9):
+                self.region.<span class="skw">click</span>(add_to_album_dialog_button_10_9)
+            self.region.<span class="skw">click</span>(my_albums_button_unselected)
+            time.<span class="skw">sleep</span>(<span class="dig">15</span>)
+            <span class="kw">if</span> <span class="kw">not</span> region.exists(item_in_album_view, default_wait_time):
+                <span class="kw">return</span> False, <span class="str">"Failed to add item to the new created album"</span>
+        <span class="kw">else</span>:
+            <span class="skw">type</span>(album_name)
+            <span class="kw">if</span> self.region.exists(add_to_album_dialog_button_10_10):
+                self.region.<span class="skw">click</span>(add_to_album_dialog_button_10_10)
+            <span class="kw">if</span> self.region.exists(add_to_album_dialog_button_10_9):
+                self.region.<span class="skw">click</span>(add_to_album_dialog_button_10_9)
+            self.region.<span class="skw">click</span>(add_dialog_button)
+            self.region.<span class="skw">click</span>(my_albums_button_unselected)
+        <span class="kw">return</span> True
+
+    <span class="kw">def</span> add_to_album_via_bottom_bar(self):
+        <span class="kw">if</span> self.region.exists(plus_button, default_wait_time):
+            self.region.<span class="skw">click</span>(plus_button)
+            <span class="kw">if</span> self.region.exists(add_to_button, default_wait_time):
+                self.region.<span class="skw">click</span>(add_to_button)
+                <span class="kw">return</span> True
+        <span class="kw">return</span> False, <span class="str">"Fail to find 'Add to Album' menu item"</span>
+
+    <span class="kw">def</span> open_album(self, album_item):
+        <span class="kw">if</span> <span class="kw">not</span> self.region.exists(album_item):
+            <span class="kw">return</span> False, <span class="str">"The specified album is not existed"</span>
+        self.region.<span class="skw">doubleClick</span>(album_item)
+        <span class="kw">return</span> True
+
+    <span class="kw">def</span> open_share_group(self, group_item):
+        <span class="kw">if</span> <span class="kw">not</span> self.region.exists(group_item):
+            <span class="kw">return</span> False, <span class="str">"The specified shared group doesn't exist"</span>
+        self.region.<span class="skw">doubleClick</span>(group_item)
+        <span class="kw">return</span> True
+
+    <span class="kw">def</span> like_album(self, album_item):
+        <span class="str">'''To like the specified album in the sharing folder'''</span>
+        helper.assert_step(self.switch_to_shared_with_me_view())
+        <span class="kw">if</span> <span class="kw">not</span> self.open_album(album_item):
+            <span class="kw">return</span> False, <span class="str">"Open album failed"</span>
+        <span class="kw">if</span> <span class="kw">not</span> self.region.exists(like_button):
+            <span class="kw">return</span> False, <span class="str">"There is no like button or it is already liked"</span>
+        self.region.<span class="skw">click</span>(like_button)
+        time.<span class="skw">sleep</span>(<span class="dig">2</span>)
+        <span class="kw">if</span> <span class="kw">not</span> self.region.exists(unlike_button):
+            <span class="kw">return</span> False, <span class="str">"You can't like the album, like operation is failed"</span>
+        <span class="kw">return</span> True
+
+    <span class="kw">def</span> back_to_album(self):
+        self.region.<span class="skw">click</span>(back_button)
+
+    <span class="kw">def</span> unlike_album(self, album_item):
+        <span class="str">'''To unlike the specified album in the sharing folder'''</span>
+        helper.assert_step(self.switch_to_shared_with_me_view())
+        <span class="kw">if</span> <span class="kw">not</span> self.open_album(album_item):
+            <span class="kw">return</span> False, <span class="str">"Open album failed"</span>
+        <span class="kw">if</span> <span class="kw">not</span> self.region.exists(unlike_button):
+            <span class="kw">return</span> False, <span class="str">"There is no unlike button or it is already unliked"</span>
+        self.region.<span class="skw">click</span>(unlike_button)
+        time.<span class="skw">sleep</span>(<span class="dig">2</span>)
+        <span class="kw">if</span> <span class="kw">not</span> self.region.exists(like_button):
+            <span class="kw">return</span> False, <span class="str">"Unlike operation is failed"</span>
+        <span class="kw">return</span> True
+
+    <span class="kw">def</span> rename_album_in_album_header(self, item, new_name):
+        <span class="kw">if</span> <span class="kw">not</span> self.region.exists(item, default_wait_time):
+            <span class="kw">return</span> False, <span class="str">"Cannot find album title"</span>
+        self.region.<span class="skw">click</span>(item)
+        time.<span class="skw">sleep</span>(<span class="dig">1</span>)
+        <span class="skw">type</span>(new_name)
+        <span class="skw">type</span>(Key.ENTER)
+        <span class="kw">return</span> True
+
+    <span class="kw">def</span> like_media(self, media_item):
+        <span class="str">'''To like the specified media in the sharing folder'''</span>
+        helper.assert_step(self.switch_to_shared_with_me_view())
+        self.play_video(media_item)
+        time.<span class="skw">sleep</span>(<span class="dig">5</span>)
+
+        <span class="kw">if</span> <span class="kw">not</span> self.region.exists(like_button):
+            <span class="kw">return</span> False, <span class="str">"There is no like button or it is already liked"</span>
+        self.region.<span class="skw">click</span>(like_button)
+        time.<span class="skw">sleep</span>(<span class="dig">2</span>)
+        <span class="kw">if</span> <span class="kw">not</span> self.region.exists(unlike_button):
+            <span class="kw">return</span> False, <span class="str">"You can't like the media, like operation is failed"</span>
+        <span class="kw">if</span> <span class="kw">not</span> self.region.exists(one_like_message):
+            <span class="kw">return</span> False, <span class="str">"The like number is not correct"</span>
+        <span class="kw">return</span> True
+
+    <span class="kw">def</span> unlike_media(self, media_item):
+        <span class="str">'''To like the specified media in the sharing folder'''</span>
+        helper.assert_step(self.switch_to_shared_with_me_view())
+        self.play_video(media_item)
+        time.<span class="skw">sleep</span>(<span class="dig">5</span>)
+
+        <span class="kw">if</span> <span class="kw">not</span> self.region.exists(unlike_button):
+            <span class="kw">return</span> False, <span class="str">"There is no unlike button or it is already unliked"</span>
+        self.region.<span class="skw">click</span>(unlike_button)
+        time.<span class="skw">sleep</span>(<span class="dig">2</span>)
+        <span class="kw">if</span> <span class="kw">not</span> self.region.exists(like_button):
+            <span class="kw">return</span> False, <span class="str">"You can't unlike the media, unlike operation is failed"</span>
+        <span class="kw">if</span> self.region.exists(one_like_message):
+            <span class="kw">return</span> False, <span class="str">"The like number is not correct"</span>
+        <span class="kw">return</span> True
+
+    <span class="kw">def</span> share_media_in_library_view(self, media_item_list, share_to_account=account_username2):
+        <span class="str">""" Share a media item or multiple media items to another account.
+           currenly we use default account_username to share """</span>
+
+        <span class="kw">if</span> self.region.exists(photos_and_videos_button_selected):
+            self.region.<span class="skw">click</span>(photos_and_videos_button_selected)
+        <span class="kw">else</span>:
+            <span class="kw">return</span> False, <span class="str">"Fail to find 'Photos &amp; Videos' button"</span>
+
+        <span class="cmt"># Select an album to share</span>
+        helper.log(<span class="str">"The media item(s) will be shared"</span>)
+        self._multiple_select(media_item_list)
+
+        <span class="kw">return</span> self.share_media(share_to_account)
+
+    <span class="kw">def</span> _multiple_select(self, items):
+        <span class="cmt"># to multi-select media items, we need keyDown command key.</span>
+        self.region.keyDown(Key.CMD)
+        <span class="kw">for</span> item <span class="kw">in</span> items:
+            <span class="kw">if</span> <span class="kw">not</span> self.region.exists(item, default_wait_time):
+                <span class="kw">return</span> False, <span class="str">"The media item is not existed"</span>
+            self.region.<span class="skw">click</span>(item)
+        self.region.keyUp(Key.CMD)
+
+    <span class="kw">def</span> share_story(self, story_icon, share_account=account_username2, wait_time=default_wait_long_time):
+        self.region.<span class="skw">click</span>(story_icon)
+        helper.assert_step(self.share_via_bottom_bar())
+        <span class="kw">return</span> self.share_dialog(share_account, wait_time)
+
+    <span class="kw">def</span> share_media(self, share_account=account_username2):
+        helper.assert_step(self.share_via_bottom_bar())
+        <span class="kw">return</span> self.share_dialog(share_account)
+
+    <span class="kw">def</span> share_via_bottom_bar(self):
+        <span class="kw">if</span> self.region.exists(plus_button, default_wait_time):
+            self.region.<span class="skw">click</span>(plus_button)
+            <span class="kw">if</span> self.region.exists(share_button, default_wait_time):
+                self.region.<span class="skw">click</span>(share_button)
+                <span class="kw">return</span> True
+        <span class="kw">return</span> False, <span class="str">"Fail to find 'Share' menu item"</span>
+
+
+    <span class="kw">def</span> share_group(self, share_to_account=account_username2):
+        self.region.<span class="skw">click</span>(share_group_button)
+        <span class="kw">return</span> self.share_dialog(share_to_account)
+
+    <span class="kw">def</span> share_album(self, album_item, share_to_account=account_username2):
+        <span class="str">""" Share an album to another account, currenly we use default account_username to share """</span>
+
+        helper.log(<span class="str">"Switch to album"</span>)
+        helper.retry(self.switch_to_albums_view)
+
+        <span class="cmt"># Select an album to share</span>
+        helper.log(<span class="str">"The ablum created will be shared"</span>)
+        <span class="kw">if</span> <span class="kw">not</span> self.region.exists(album_item, default_wait_long_time):
+            <span class="kw">return</span> False, <span class="str">"The album item is not existed"</span>
+        helper.log(<span class="str">"right click album"</span>)
+        self.region.<span class="skw">click</span>(album_item)
+        helper.assert_step(self.share_via_bottom_bar())
+        time.<span class="skw">sleep</span>(<span class="dig">20</span>)
+
+        <span class="kw">return</span> self.share_dialog(share_to_account)
+
+    <span class="kw">def</span> share_dialog(self, share_to_account, wait_time=default_wait_long_time):
+        <span class="kw">if</span> <span class="kw">not</span> self.region.exists(enter_names_text_box, wait_time):
+            <span class="kw">return</span> False, <span class="str">"Share dialog doesn't be poped up"</span>
+
+        self.region.<span class="skw">click</span>(enter_names_text_box)
+        self.region.<span class="skw">click</span>(enter_names_text_box)
+        <span class="skw">type</span>(share_to_account)
+        time.<span class="skw">sleep</span>(<span class="dig">1</span>)
+        self.region.<span class="skw">click</span>(write_something_text_box)
+        self.region.<span class="skw">click</span>(write_something_text_box)
+        <span class="skw">type</span>(<span class="str">"share an item(s)"</span>)
+
+        <span class="kw">if</span> <span class="kw">not</span> self.region.exists(share_button_of_share_dialog):
+            <span class="kw">return</span> False, <span class="str">"The share button is not existed"</span>
+        self.region.<span class="skw">click</span>(share_button_of_share_dialog)
+
+        <span class="kw">if</span> <span class="kw">not</span> self.region.exists(share_success_text, default_wait_time):
+            <span class="kw">return</span> False, <span class="str">"The sharing is not successful"</span>
+        self.region.<span class="skw">click</span>(close_button_of_share_dialog)
+
+        <span class="kw">return</span> True
+
+    <span class="kw">def</span> close_gallery_view(self):
+        os.system(
+            <span class="str">"osascript "</span> + os.path.join(applescript_path, <span class="str">"close_gallery_view.applescript"</span>))
+
+    <span class="kw">def</span> search_library(self, media_name):
+        cmd = <span class="str">"osascript "</span> + os.path.join(applescript_path, <span class="str">"search_library.applescript"</span>) + <span class="str">" "</span> + media_name
+        os.system(cmd)
+</pre>
+</body>
+</html>
